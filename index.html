@@ -12,6 +12,9 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 
+/* ═══════════════════════════════════════
+   BRAND TOKENS
+═══════════════════════════════════════ */
 :root {
   --ink:   #0A0A0A;
   --paper: #FAFAF7;
@@ -21,10 +24,14 @@
   --light: #C8C8C4;
   --cloud: #F0F0EC;
   --mono:  'JetBrains Mono', monospace;
+
+  /* MAX-WIDTH KONTAJNER PRE 4K (programátor + dizajnér + typograf) */
+  --max-w: 1440px;
+
   --pad-x: 40px;
   --pad-x-mob: 20px;
   --nav-h: 68px;
-  --section-pad: 72px 40px;
+  --section-pad-y: 88px;     /* väčší spacing medzi sekciami (3 hlasy) */
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -44,7 +51,23 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Reduced motion fallback (typograf + programátor)  */
+@media (prefers-reduced-motion: reduce) {
+  .hero-loader .d,
+  .dot-divider span {
+    animation: none !important;
+  }
+}
+
 /* ── PRIMITIVES ── */
+.section {
+  padding: var(--section-pad-y) var(--pad-x);
+}
+.section-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+}
+
 .section-label {
   font-size: 11px;
   letter-spacing: 0.3em;
@@ -58,47 +81,48 @@ body {
 .section-label .num { color: var(--red); }
 
 .section-title {
-  font-size: 22px;
-  font-weight: 400;
+  font-size: 28px;                /* zväčšené pre kontrast (typograf) */
+  font-weight: 500;               /* viac váhy (typograf) */
   letter-spacing: 0;
   color: var(--ink);
-  line-height: 1.25;
+  line-height: 1.2;
 }
 
 .body-text {
-  font-size: 14px;
+  font-size: 15px;                /* zväčšené z 14 (typograf) */
   line-height: 1.75;
   color: var(--mid);
-  max-width: 60ch;
+  max-width: 60ch;                /* riadky nie sú nekonečné (typograf) */
 }
 
 [data-en] { display: none; }
 .lang-en [data-cs] { display: none; }
 .lang-en [data-en] { display: inline; }
 
-/* ── DOT DIVIDER ── */
+/* ═══════════════════════════════════════
+   DOT DIVIDER — interaktívny, rovnaký raster ako hero
+═══════════════════════════════════════ */
 .dot-divider {
-  height: 28px;
-  border-top: 1px solid var(--light);
-  border-bottom: 1px solid var(--light);
+  width: 100%;
+  height: 56px;
+  background: var(--paper);
+  position: relative;
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  padding: 0 var(--pad-x);
+  /* žiadne border-top/bottom — čistá tečková linka */
+  touch-action: pan-y;              /* 50% scrolling: vertikálne posúvanie funguje */
+  cursor: crosshair;
 }
-.dot-divider span {
-  font-size: 10px;
-  letter-spacing: 0.5em;
-  color: var(--light);
-  white-space: nowrap;
-  animation: drift 80s linear infinite;
-}
-@keyframes drift {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
+.dot-divider canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
-/* ── NAV ── */
+/* ═══════════════════════════════════════
+   NAV
+═══════════════════════════════════════ */
 .nav {
   position: sticky;
   top: 0;
@@ -156,6 +180,7 @@ body {
   cursor: pointer;
   color: var(--mid);
   transition: background 0.15s, color 0.15s;
+  min-height: 28px;
 }
 .lang-btn.active { background: var(--ink); color: var(--paper); }
 
@@ -167,10 +192,11 @@ body {
   background: transparent;
   border: 1px solid var(--ink);
   color: var(--ink);
-  padding: 8px 16px;
+  padding: 10px 18px;             /* väčší touch target (dizajnér + laik) */
   cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
   white-space: nowrap;
+  min-height: 38px;
 }
 .nav-cta:hover { background: var(--red); border-color: var(--red); color: var(--paper); }
 
@@ -181,7 +207,7 @@ body {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 6px 4px;
+  padding: 10px 8px;              /* väčší touch target */
 }
 .hamburger span { display: block; width: 22px; height: 1px; background: var(--ink); transition: transform 0.2s, opacity 0.2s; }
 .hamburger.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
@@ -202,19 +228,19 @@ body {
 }
 .nav-drawer.open { display: flex; }
 .nav-drawer a {
-  font-size: 13px;
+  font-size: 14px;
   letter-spacing: 0.28em;
   text-transform: lowercase;
   color: var(--ink);
   text-decoration: none;
-  padding: 10px 0;
+  padding: 14px 0;                /* väčší touch target */
   border-bottom: 1px solid var(--light);
 }
 .nav-drawer-bottom { display: flex; gap: 10px; padding-top: 8px; }
 
-/* ══════════════════════════════════════
-   HERO — dotfield ako pozadie
-══════════════════════════════════════ */
+/* ═══════════════════════════════════════
+   HERO — interaktívne dot pole ako pozadie
+═══════════════════════════════════════ */
 #home {
   position: relative;
   width: 100%;
@@ -222,7 +248,7 @@ body {
   display: flex;
   align-items: center;
   overflow: hidden;
-  touch-action: none;
+  touch-action: none;             /* dotfield: ŽIADNY scrolling, len interakcia */
   cursor: crosshair;
 }
 
@@ -238,79 +264,61 @@ body {
 .hero-content {
   position: relative;
   z-index: 1;
-  padding: var(--section-pad);
-  max-width: 680px;
-  pointer-events: none;
+  padding: var(--section-pad-y) var(--pad-x);
+  max-width: var(--max-w);
+  width: 100%;
+  margin: 0 auto;
+  pointer-events: none;           /* prsť prechádza na canvas */
 }
-
+.hero-content > div {
+  max-width: 720px;
+}
 .hero-content a,
-.hero-content button {
-  pointer-events: auto;
-}
+.hero-content button { pointer-events: auto; }
 
-.hero-loader {
-  display: flex;
-  gap: 18px;
-  margin-bottom: 32px;
-}
-.hero-loader .d {
-  width: 5px; height: 5px;
-  border-radius: 50%;
-  background: var(--ink);
-  opacity: 0.15;
-  animation: fc-pulse 1.6s infinite cubic-bezier(0.16, 1, 0.3, 1);
-}
-.d:nth-child(1) { animation-delay: 0s; }
-.d:nth-child(2) { animation-delay: 0.2s; }
-.d:nth-child(3) { animation-delay: 0.4s; background: var(--red); }
-.d:nth-child(4) { animation-delay: 0.6s; }
-.d:nth-child(5) { animation-delay: 0.8s; }
-@keyframes fc-pulse {
-  0%,100% { opacity: 0.15; }
-  50%      { opacity: 1; }
-}
-
+/* Hero H1 — DRAMATICKY VÄČŠÍ (typograf, umelec, dizajnér — TROJZHODA) */
 .hero-h1 {
-  font-size: 52px;
-  font-weight: 400;
-  letter-spacing: 0.18em;
+  font-size: clamp(40px, 7vw, 88px);
+  font-weight: 500;               /* viac váhy (typograf) */
+  letter-spacing: 0.06em;         /* zmenšené (typograf) */
   text-transform: lowercase;
-  line-height: 1.1;
+  line-height: 1.05;              /* tesnejší riadkový riadok (typograf) */
   color: var(--ink);
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
-.hero-h1 em { font-style: normal; color: var(--mid); }
+.hero-h1 em { font-style: normal; color: var(--mid); font-weight: 400; }
 
 .hero-sub {
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.75;
   color: var(--mid);
   max-width: 48ch;
-  margin-bottom: 36px;
+  margin-bottom: 40px;
 }
 
-.hero-actions { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.hero-actions { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
 
 .btn {
   font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.28em;
+  font-size: 11px;
+  letter-spacing: 0.24em;
   text-transform: lowercase;
   border: 1px solid var(--ink);
   background: var(--ink);
   color: var(--paper);
-  padding: 11px 22px;
+  padding: 14px 26px;             /* väčší touch target */
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
   text-decoration: none;
   display: inline-block;
+  min-height: 44px;
 }
 .btn:hover { background: transparent; color: var(--ink); }
 
 .btn-ghost {
   font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.28em;
+  font-size: 11px;
+  letter-spacing: 0.24em;
   text-transform: lowercase;
   background: transparent;
   border: none;
@@ -318,13 +326,15 @@ body {
   cursor: pointer;
   text-decoration: none;
   transition: color 0.15s;
+  padding: 14px 4px;              /* touch target */
 }
 .btn-ghost:hover { color: var(--ink); }
 
+/* Hint pod heroom */
 #dothint {
   position: absolute;
   left: 50%;
-  bottom: 24px;
+  bottom: 22px;
   transform: translateX(-50%);
   font-size: 10px;
   letter-spacing: 0.3em;
@@ -338,14 +348,19 @@ body {
 }
 #home.touched #dothint { opacity: 0; }
 
-/* ── GALLERY ── */
-#gallery { padding: var(--section-pad); }
+/* ═══════════════════════════════════════
+   GALLERY
+═══════════════════════════════════════ */
+#gallery {
+  padding: var(--section-pad-y) var(--pad-x);
+}
+#gallery > .gallery-inner { max-width: var(--max-w); margin: 0 auto; }
 
 .gallery-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  margin-bottom: 28px;
+  margin-bottom: 32px;
 }
 .gallery-count { font-size: 11px; letter-spacing: 0.08em; color: var(--mid); }
 
@@ -366,15 +381,9 @@ body {
 .g-card:hover .g-overlay { opacity: 1; }
 .g-card:hover .g-dots { opacity: 0.28; }
 
-.g-thumb {
-  aspect-ratio: 16/10;
-  position: relative;
-  overflow: hidden;
-  background: var(--cloud);
-}
+.g-thumb { aspect-ratio: 16/10; position: relative; overflow: hidden; background: var(--cloud); }
 .g-dots {
-  position: absolute;
-  inset: 0;
+  position: absolute; inset: 0;
   background-image: radial-gradient(circle, rgba(10,10,10,0.2) 1px, transparent 1px);
   background-size: 9px 9px;
   mask-image: radial-gradient(ellipse at 50% 45%, black 0%, transparent 65%);
@@ -384,60 +393,46 @@ body {
 }
 .g-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .g-overlay {
-  position: absolute;
-  inset: 0;
+  position: absolute; inset: 0;
   background: rgba(10,10,10,0.55);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.18s;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.18s;
 }
 .play-btn {
-  width: 40px; height: 40px;
+  width: 44px; height: 44px;
   border: 1px solid rgba(250,250,247,0.7);
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  color: var(--paper);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; color: var(--paper);
 }
 .g-meta {
-  padding: 11px 13px;
+  padding: 12px 14px;
   border-top: 1px solid var(--light);
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
+  display: flex; justify-content: space-between; align-items: baseline;
 }
-.g-name { font-size: 11px; letter-spacing: 0.04em; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 72%; }
+.g-name { font-size: 12px; letter-spacing: 0.04em; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 72%; }
 .g-info { font-size: 10px; letter-spacing: 0.06em; color: var(--mid); }
 
-/* ── TOUR MODAL ── */
+/* ═══════════════════════════════════════
+   TOUR MODAL
+═══════════════════════════════════════ */
 .modal-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
+  display: none; position: fixed; inset: 0;
   background: rgba(10,10,10,0.88);
   z-index: 500;
-  align-items: center;
-  justify-content: center;
+  align-items: center; justify-content: center;
   padding: 24px;
 }
 .modal-overlay.open { display: flex; }
 .modal-box {
   background: var(--cloud);
   border: 1px solid var(--light);
-  width: 100%;
-  max-width: 1080px;
-  display: flex;
-  flex-direction: column;
+  width: 100%; max-width: 1080px;
+  display: flex; flex-direction: column;
   max-height: 90vh;
 }
 .modal-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  display: flex; justify-content: space-between; align-items: center;
   padding: 11px 14px;
   border-bottom: 1px solid var(--light);
   flex-shrink: 0;
@@ -452,9 +447,10 @@ body {
   background: transparent;
   border: 1px solid var(--light);
   color: var(--mid);
-  padding: 6px 12px;
+  padding: 8px 14px;
   cursor: pointer;
   transition: border-color 0.15s, color 0.15s;
+  min-height: 34px;
 }
 .modal-btn:hover { border-color: var(--ink); color: var(--ink); }
 .modal-btn.close { border-color: var(--ink); color: var(--ink); }
@@ -462,77 +458,112 @@ body {
 .modal-iframe-wrap { flex: 1; position: relative; min-height: 400px; }
 .modal-iframe-wrap iframe { width: 100%; height: 100%; border: none; display: block; position: absolute; inset: 0; }
 
-/* ── PROCESS ── */
-#process { padding: var(--section-pad); }
-.process-header { margin-bottom: 36px; }
+/* ═══════════════════════════════════════
+   PROCESS
+═══════════════════════════════════════ */
+#process {
+  padding: var(--section-pad-y) var(--pad-x);
+}
+#process > .process-inner { max-width: var(--max-w); margin: 0 auto; }
+
+.process-header { margin-bottom: 40px; }
+
 .process-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+
 .process-step {
   background: var(--cloud);
   border: 1px solid var(--light);
-  padding: 26px 22px;
+  padding: 30px 24px;
   position: relative;
   overflow: hidden;
 }
 .process-step .corner-dots {
-  position: absolute;
-  top: 0; right: 0;
+  position: absolute; top: 0; right: 0;
   width: 60px; height: 60px;
   background-image: radial-gradient(circle, rgba(10,10,10,0.1) 1px, transparent 1px);
   background-size: 9px 9px;
 }
-.process-num { font-size: 11px; letter-spacing: 0.3em; text-transform: lowercase; color: var(--red); margin-bottom: 14px; }
-.process-name { font-size: 16px; font-weight: 500; color: var(--ink); margin-bottom: 8px; line-height: 1.3; }
-.process-desc { font-size: 12px; letter-spacing: 0.02em; color: var(--mid); line-height: 1.7; }
+.process-num { font-size: 11px; letter-spacing: 0.3em; text-transform: lowercase; color: var(--red); margin-bottom: 18px; }
+.process-name { font-size: 18px; font-weight: 500; color: var(--ink); margin-bottom: 10px; line-height: 1.3; }
+.process-desc { font-size: 13px; letter-spacing: 0.02em; color: var(--mid); line-height: 1.7; }
 
-/* ── ABOUT ── */
-#about { padding: var(--section-pad); display: grid; grid-template-columns: 200px 1fr; gap: 64px; }
+/* ═══════════════════════════════════════
+   ABOUT
+═══════════════════════════════════════ */
+#about {
+  padding: var(--section-pad-y) var(--pad-x);
+}
+#about > .about-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 64px;
+}
 .stats { display: flex; flex-direction: column; gap: 24px; }
 .stat { border-top: 1px solid var(--light); padding-top: 12px; }
-.stat-num { font-size: 32px; font-weight: 400; letter-spacing: 0.04em; color: var(--ink); line-height: 1; margin-bottom: 4px; }
+.stat-num { font-size: 36px; font-weight: 500; letter-spacing: 0; color: var(--ink); line-height: 1; margin-bottom: 6px; }
 .stat-unit { font-size: 14px; color: var(--mid); }
 .stat-label { font-size: 11px; letter-spacing: 0.05em; color: var(--mid); }
-.about-text .section-title { margin-bottom: 16px; margin-top: 2px; }
-.tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 20px; }
-.tag { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); border: 1px solid var(--light); padding: 4px 9px; }
+.about-text .section-title { margin-bottom: 18px; margin-top: 2px; }
+.tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 24px; }
+.tag { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); border: 1px solid var(--light); padding: 5px 10px; }
 
-/* ── USE CASES ── */
-#usecases { padding: var(--section-pad); }
-.uc-header { margin-bottom: 32px; }
+/* ═══════════════════════════════════════
+   USE CASES
+═══════════════════════════════════════ */
+#usecases {
+  padding: var(--section-pad-y) var(--pad-x);
+}
+#usecases > .uc-inner { max-width: var(--max-w); margin: 0 auto; }
+
+.uc-header { margin-bottom: 36px; }
 .uc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .uc-item {
   background: var(--cloud);
   border: 1px solid var(--light);
-  padding: 22px;
+  padding: 26px;
   transition: border-color 0.15s;
   position: relative;
   overflow: hidden;
 }
 .uc-item:hover { border-color: var(--ink); }
 .uc-dot-corner { position: absolute; top: 0; right: 0; width: 48px; height: 48px; background-image: radial-gradient(circle, rgba(10,10,10,0.08) 1px, transparent 1px); background-size: 8px 8px; }
-.uc-num  { font-size: 10px; letter-spacing: 0.28em; text-transform: lowercase; color: var(--mid); margin-bottom: 12px; }
-.uc-name { font-size: 14px; font-weight: 500; color: var(--ink); margin-bottom: 8px; line-height: 1.3; }
-.uc-desc { font-size: 12px; letter-spacing: 0.02em; color: var(--mid); line-height: 1.65; }
+.uc-num  { font-size: 10px; letter-spacing: 0.28em; text-transform: lowercase; color: var(--mid); margin-bottom: 14px; }
+.uc-name { font-size: 15px; font-weight: 500; color: var(--ink); margin-bottom: 10px; line-height: 1.3; }
+.uc-desc { font-size: 13px; letter-spacing: 0.02em; color: var(--mid); line-height: 1.65; }
 
-/* ── CONTACT ── */
-#contact { padding: var(--section-pad); display: grid; grid-template-columns: 1fr 1fr; gap: 64px; }
-.contact-intro .section-title { margin-bottom: 16px; margin-top: 4px; }
-.contact-channels { margin-top: 24px; display: flex; flex-direction: column; gap: 14px; }
-.channel { display: flex; align-items: baseline; gap: 14px; padding: 10px 0; border-top: 1px solid var(--light); }
+/* ═══════════════════════════════════════
+   CONTACT
+═══════════════════════════════════════ */
+#contact {
+  padding: var(--section-pad-y) var(--pad-x);
+}
+#contact > .contact-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+}
+.contact-intro .section-title { margin-bottom: 18px; margin-top: 4px; }
+.contact-channels { margin-top: 28px; display: flex; flex-direction: column; gap: 14px; }
+.channel { display: flex; align-items: baseline; gap: 14px; padding: 12px 0; border-top: 1px solid var(--light); }
 .channel-label { font-size: 10px; letter-spacing: 0.28em; text-transform: lowercase; color: var(--mid); min-width: 72px; }
-.channel-value { font-size: 13px; color: var(--ink); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+.channel-value { font-size: 14px; color: var(--ink); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
 .channel-value:hover { border-bottom-color: var(--red); }
 
-.form { display: flex; flex-direction: column; gap: 12px; }
-.field { display: flex; flex-direction: column; gap: 5px; }
+.form { display: flex; flex-direction: column; gap: 14px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
 .field label { font-size: 10px; letter-spacing: 0.28em; text-transform: lowercase; color: var(--mid); }
 .field input, .field textarea, .field select {
   font-family: var(--mono);
-  font-size: 13px;
+  font-size: 14px;
   letter-spacing: 0.02em;
   background: var(--cloud);
   border: 1px solid var(--light);
   color: var(--ink);
-  padding: 10px 12px;
+  padding: 12px 14px;
   outline: none;
   transition: border-color 0.15s;
   width: 100%;
@@ -542,71 +573,79 @@ body {
 }
 .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--blue); }
 .field input:invalid:not(:placeholder-shown) { border-color: var(--red); }
-.field textarea { resize: vertical; min-height: 110px; }
+.field textarea { resize: vertical; min-height: 120px; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .form-submit {
   font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.28em;
+  font-size: 11px;
+  letter-spacing: 0.24em;
   text-transform: lowercase;
   background: var(--ink);
   color: var(--paper);
   border: 1px solid var(--ink);
-  padding: 12px 24px;
+  padding: 14px 28px;
   cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
   align-self: flex-start;
-  margin-top: 6px;
+  margin-top: 8px;
+  min-height: 44px;
 }
 .form-submit:hover { background: var(--red); border-color: var(--red); color: var(--paper); }
 .form-note { font-size: 10px; letter-spacing: 0.06em; color: var(--mid); margin-top: 4px; }
 
-/* ── FOOTER ── */
+/* ═══════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════ */
 footer {
-  padding: 28px var(--pad-x);
+  padding: 32px var(--pad-x);
   border-top: 1px solid var(--light);
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 24px;
+  max-width: var(--max-w);
+  margin: 0 auto;
 }
 .footer-logo { height: 32px; display: block; }
 .footer-logo img { height: 100%; width: auto; display: block; }
 .footer-info { display: flex; flex-direction: column; gap: 4px; align-items: center; text-align: center; }
-.footer-url { font-size: 11px; letter-spacing: 0.05em; color: var(--ink); }
+.footer-url { font-size: 12px; letter-spacing: 0.05em; color: var(--ink); }
 .footer-copy { font-size: 10px; letter-spacing: 0.06em; color: var(--mid); }
 .footer-links { display: flex; gap: 20px; }
-.footer-link { font-size: 10px; letter-spacing: 0.24em; text-transform: lowercase; color: var(--mid); text-decoration: none; transition: color 0.15s; }
+.footer-link { font-size: 10px; letter-spacing: 0.24em; text-transform: lowercase; color: var(--mid); text-decoration: none; transition: color 0.15s; padding: 8px 0; }
 .footer-link:hover { color: var(--red); }
 
-/* ── RESPONSIVE ── */
+/* ═══════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════ */
 @media (max-width: 900px) {
-  :root { --section-pad: 56px 24px; --pad-x: 24px; }
+  :root { --section-pad-y: 64px; --pad-x: 24px; }
   .nav-links { display: none; }
   .nav-cta   { display: none; }
   .hamburger { display: flex; }
-  .hero-h1 { font-size: 36px; letter-spacing: 0.14em; }
+
   .gallery-grid { grid-template-columns: repeat(2, 1fr); }
   .process-grid { grid-template-columns: 1fr; }
-  #about    { grid-template-columns: 1fr; gap: 32px; }
-  #contact  { grid-template-columns: 1fr; gap: 40px; }
-  .uc-grid  { grid-template-columns: 1fr; }
-  footer    { flex-direction: column; gap: 20px; align-items: center; }
+  #about > .about-inner    { grid-template-columns: 1fr; gap: 36px; }
+  #contact > .contact-inner { grid-template-columns: 1fr; gap: 44px; }
+  .uc-grid { grid-template-columns: 1fr; }
+  footer { flex-direction: column; gap: 20px; align-items: center; }
 }
 
 @media (max-width: 600px) {
-  :root { --section-pad: 44px 20px; --pad-x: 20px; }
+  :root { --section-pad-y: 56px; --pad-x: 20px; }
   .nav { padding: 0 var(--pad-x-mob); }
   .nav-logo { height: 34px; }
   .gallery-grid { grid-template-columns: 1fr; }
   .gallery-header { flex-direction: column; align-items: flex-start; gap: 8px; }
   .form-row { grid-template-columns: 1fr; }
-  .hero-h1 { font-size: 28px; letter-spacing: 0.12em; }
   .modal-overlay { padding: 12px; }
   .modal-box { max-height: 95vh; }
-  .dot-divider { padding: 0 var(--pad-x-mob); }
   .channel { flex-direction: column; gap: 4px; }
   .channel-label { min-width: 0; }
+
+  /* divider menší na mobile */
+  .dot-divider { height: 44px; }
 }
 
 </style>
@@ -614,6 +653,7 @@ footer {
 
 <body id="body" class="lang-cs">
 
+<!-- ═══ NAV ═══ -->
 <nav class="nav" id="nav">
   <a href="#home" class="nav-logo" aria-label="flyingcat">
     <img src="logo.png" alt="flyingcat">
@@ -651,23 +691,23 @@ footer {
   </div>
 </nav>
 
+<!-- ═══ HERO — interactive dot field ═══ -->
 <section id="home" aria-labelledby="hero-heading">
   <canvas id="dotcanvas" aria-hidden="true"></canvas>
   <div class="hero-content">
-    <div class="hero-loader" aria-hidden="true">
-      <div class="d"></div><div class="d"></div><div class="d"></div><div class="d"></div><div class="d"></div>
-    </div>
-    <h1 class="hero-h1" id="hero-heading">
-      <span data-cs>zaznamenáváme<br><em>prostor.</em></span>
-      <span data-en>we record<br><em>space.</em></span>
-    </h1>
-    <p class="hero-sub">
-      <span data-cs>studio pro fotorealistické 3D prohlídky. zachycujeme vaše prostory v gaussian splatting a doručujeme je na vlastní URL — pro klienta, jednoduše, v každém prohlížeči.</span>
-      <span data-en>studio for photorealistic 3D tours. we capture your spaces in gaussian splatting and deliver them on a custom URL — for your client, in any browser, no install required.</span>
-    </p>
-    <div class="hero-actions">
-      <a href="#gallery" class="btn"><span data-cs>naše prohlídky</span><span data-en>our tours</span></a>
-      <a href="#process" class="btn-ghost"><span data-cs>↗ jak to funguje</span><span data-en>↗ how it works</span></a>
+    <div>
+      <h1 class="hero-h1" id="hero-heading">
+        <span data-cs>zaznamenáváme<br><em>prostor.</em></span>
+        <span data-en>we record<br><em>space.</em></span>
+      </h1>
+      <p class="hero-sub">
+        <span data-cs>studio pro fotorealistické 3D prohlídky. zachycujeme vaše prostory v gaussian splatting a doručujeme je na vlastní URL — pro klienta, jednoduše, v každém prohlížeči.</span>
+        <span data-en>studio for photorealistic 3D tours. we capture your spaces in gaussian splatting and deliver them on a custom URL — for your client, in any browser, no install required.</span>
+      </p>
+      <div class="hero-actions">
+        <a href="#gallery" class="btn"><span data-cs>naše prohlídky</span><span data-en>our tours</span></a>
+        <a href="#process" class="btn-ghost"><span data-cs>↗ jak to funguje</span><span data-en>↗ how it works</span></a>
+      </div>
     </div>
   </div>
   <div id="dothint" aria-hidden="true">
@@ -675,17 +715,23 @@ footer {
   </div>
 </section>
 
-<div class="dot-divider" aria-hidden="true"><span>·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·</span></div>
+<!-- ═══ DIVIDER 1 ═══ -->
+<div class="dot-divider" aria-hidden="true" data-divider>
+  <canvas></canvas>
+</div>
 
+<!-- ═══ GALLERY ═══ -->
 <section id="gallery" aria-labelledby="gallery-heading">
-  <div class="gallery-header">
-    <div>
-      <div class="section-label"><span class="num">01</span>&nbsp;&nbsp;<span data-cs>prohlídky</span><span data-en>gallery</span></div>
-      <h2 class="section-title" id="gallery-heading"><span data-cs>naše prohlídky</span><span data-en>our recent work</span></h2>
+  <div class="gallery-inner">
+    <div class="gallery-header">
+      <div>
+        <div class="section-label"><span class="num">01</span>&nbsp;&nbsp;<span data-cs>prohlídky</span><span data-en>gallery</span></div>
+        <h2 class="section-title" id="gallery-heading"><span data-cs>naše prohlídky</span><span data-en>our recent work</span></h2>
+      </div>
+      <div class="gallery-count" id="gallery-count"></div>
     </div>
-    <div class="gallery-count" id="gallery-count"></div>
+    <div class="gallery-grid" id="gallery-grid"></div>
   </div>
-  <div class="gallery-grid" id="gallery-grid"></div>
 </section>
 
 <div class="modal-overlay" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
@@ -701,129 +747,156 @@ footer {
   </div>
 </div>
 
-<div class="dot-divider" aria-hidden="true"><span>·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·</span></div>
+<!-- ═══ DIVIDER 2 ═══ -->
+<div class="dot-divider" aria-hidden="true" data-divider>
+  <canvas></canvas>
+</div>
 
+<!-- ═══ PROCESS ═══ -->
 <section id="process" aria-labelledby="process-heading">
-  <div class="process-header">
-    <div class="section-label"><span class="num">02</span>&nbsp;&nbsp;<span data-cs>proces</span><span data-en>process</span></div>
-    <h2 class="section-title" id="process-heading"><span data-cs>jak vznikne vaše prohlídka</span><span data-en>how your tour is made</span></h2>
-  </div>
-  <div class="process-grid">
-    <div class="process-step">
-      <div class="corner-dots"></div>
-      <div class="process-num">·&nbsp;&nbsp;01</div>
-      <div class="process-name"><span data-cs>zachycení</span><span data-en>capture</span></div>
-      <div class="process-desc"><span data-cs>navštívíme váš prostor a nasnímáme ho stovkami fotografií ze všech úhlů. délka focení podle velikosti prostoru — od dvou hodin do celého dne.</span><span data-en>we visit your space and capture it through hundreds of photographs from every angle. session length scales with size — from two hours to a full day.</span></div>
+  <div class="process-inner">
+    <div class="process-header">
+      <div class="section-label"><span class="num">02</span>&nbsp;&nbsp;<span data-cs>proces</span><span data-en>process</span></div>
+      <h2 class="section-title" id="process-heading"><span data-cs>jak vznikne vaše prohlídka</span><span data-en>how your tour is made</span></h2>
     </div>
-    <div class="process-step">
-      <div class="corner-dots"></div>
-      <div class="process-num">·&nbsp;&nbsp;02</div>
-      <div class="process-name"><span data-cs>zpracování</span><span data-en>processing</span></div>
-      <div class="process-desc"><span data-cs>z fotografií trénujeme gaussian splatting model. vznikne 3D scéna ve fotorealistické věrnosti — světlo, hloubka, materiály. dodací doba 5–10 dní.</span><span data-en>we train a gaussian splatting model from the photos. the result is a 3D scene in photorealistic fidelity — light, depth, materials. delivery within 5–10 days.</span></div>
-    </div>
-    <div class="process-step">
-      <div class="corner-dots"></div>
-      <div class="process-num">·&nbsp;&nbsp;03</div>
-      <div class="process-name"><span data-cs>dodání</span><span data-en>delivery</span></div>
-      <div class="process-desc"><span data-cs>prohlídku hostujeme na vlastní URL pod doménou flyingcat.services. můžete ji sdílet linkem, vložit na svůj web nebo přiložit k nabídce. žádná instalace pro klienta.</span><span data-en>we host your tour on a custom URL under flyingcat.services. share by link, embed on your site or attach to a proposal. no install required for the viewer.</span></div>
+    <div class="process-grid">
+      <div class="process-step">
+        <div class="corner-dots"></div>
+        <div class="process-num">·&nbsp;&nbsp;01</div>
+        <div class="process-name"><span data-cs>zachycení</span><span data-en>capture</span></div>
+        <div class="process-desc"><span data-cs>navštívíme váš prostor a nasnímáme ho stovkami fotografií ze všech úhlů. délka focení podle velikosti prostoru — od dvou hodin do celého dne.</span><span data-en>we visit your space and capture it through hundreds of photographs from every angle. session length scales with size — from two hours to a full day.</span></div>
+      </div>
+      <div class="process-step">
+        <div class="corner-dots"></div>
+        <div class="process-num">·&nbsp;&nbsp;02</div>
+        <div class="process-name"><span data-cs>zpracování</span><span data-en>processing</span></div>
+        <div class="process-desc"><span data-cs>z fotografií trénujeme gaussian splatting model. vznikne 3D scéna ve fotorealistické věrnosti — světlo, hloubka, materiály. dodací doba 5–10 dní.</span><span data-en>we train a gaussian splatting model from the photos. the result is a 3D scene in photorealistic fidelity — light, depth, materials. delivery within 5–10 days.</span></div>
+      </div>
+      <div class="process-step">
+        <div class="corner-dots"></div>
+        <div class="process-num">·&nbsp;&nbsp;03</div>
+        <div class="process-name"><span data-cs>dodání</span><span data-en>delivery</span></div>
+        <div class="process-desc"><span data-cs>prohlídku hostujeme na vlastní URL pod doménou flyingcat.services. můžete ji sdílet linkem, vložit na svůj web nebo přiložit k nabídce. žádná instalace pro klienta.</span><span data-en>we host your tour on a custom URL under flyingcat.services. share by link, embed on your site or attach to a proposal. no install required for the viewer.</span></div>
+      </div>
     </div>
   </div>
 </section>
 
-<div class="dot-divider" aria-hidden="true"><span>·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·</span></div>
+<!-- ═══ DIVIDER 3 ═══ -->
+<div class="dot-divider" aria-hidden="true" data-divider>
+  <canvas></canvas>
+</div>
 
+<!-- ═══ ABOUT ═══ -->
 <section id="about" aria-labelledby="about-heading">
-  <div>
-    <div class="section-label" style="margin-bottom:24px;"><span class="num">03</span>&nbsp;&nbsp;<span data-cs>o nás</span><span data-en>about</span></div>
-    <div class="stats">
-      <div class="stat"><div class="stat-num">2025</div><div class="stat-label"><span data-cs>založeno</span><span data-en>founded</span></div></div>
-      <div class="stat"><div class="stat-num">5–10<span class="stat-unit"> dní</span></div><div class="stat-label"><span data-cs>dodací doba</span><span data-en>delivery time</span></div></div>
-      <div class="stat"><div class="stat-num">∞</div><div class="stat-label"><span data-cs>zobrazení bez limitu</span><span data-en>unlimited views</span></div></div>
+  <div class="about-inner">
+    <div>
+      <div class="section-label" style="margin-bottom:24px;"><span class="num">03</span>&nbsp;&nbsp;<span data-cs>o nás</span><span data-en>about</span></div>
+      <div class="stats">
+        <div class="stat"><div class="stat-num">2025</div><div class="stat-label"><span data-cs>založeno</span><span data-en>founded</span></div></div>
+        <div class="stat"><div class="stat-num">5–10<span class="stat-unit"> dní</span></div><div class="stat-label"><span data-cs>dodací doba</span><span data-en>delivery time</span></div></div>
+        <div class="stat"><div class="stat-num">∞</div><div class="stat-label"><span data-cs>zobrazení bez limitu</span><span data-en>unlimited views</span></div></div>
+      </div>
     </div>
-  </div>
-  <div class="about-text">
-    <h2 class="section-title" id="about-heading"><span data-cs>nezáleží na technologii.<br>záleží na zážitku.</span><span data-en>technology isn't the point.<br>experience is.</span></h2>
-    <p class="body-text" style="margin-top:18px;"><span data-cs>flyingcat je malé české studio. tvoříme gaussian splatting prohlídky míst pro klienty — od bytů a galerií po historické budovy a stavby v rekonstrukci.</span><span data-en>flyingcat is a small czech studio. we make gaussian splatting tours of places for clients — from apartments and galleries to historical buildings and construction sites.</span></p>
-    <p class="body-text" style="margin-top:14px;"><span data-cs>technologie není to co prodáváme. prodáváme jasný link, který otevřete na mobilu, a prohlížíte si prostor jako byste tam stáli. plynule, bez instalace, ve vlastní brandované URL.</span><span data-en>we don't sell the technology. we sell a clean link you open on your phone and walk through a space as if you were there. smooth, no install, on your own branded URL.</span></p>
-    <div class="tags">
-      <span class="tag">gaussian splatting</span>
-      <span class="tag">RealityScan 2.0</span>
-      <span class="tag">Cloudflare</span>
-      <span class="tag">WebGL</span>
-      <span class="tag">mobile-first</span>
-      <span class="tag">*.flyingcat.services</span>
+    <div class="about-text">
+      <h2 class="section-title" id="about-heading"><span data-cs>nezáleží na technologii.<br>záleží na zážitku.</span><span data-en>technology isn't the point.<br>experience is.</span></h2>
+      <p class="body-text" style="margin-top:18px;"><span data-cs>flyingcat je malé české studio. tvoříme gaussian splatting prohlídky míst pro klienty — od bytů a galerií po historické budovy a stavby v rekonstrukci.</span><span data-en>flyingcat is a small czech studio. we make gaussian splatting tours of places for clients — from apartments and galleries to historical buildings and construction sites.</span></p>
+      <p class="body-text" style="margin-top:14px;"><span data-cs>technologie není to co prodáváme. prodáváme jasný link, který otevřete na mobilu, a prohlížíte si prostor jako byste tam stáli. plynule, bez instalace, ve vlastní brandované URL.</span><span data-en>we don't sell the technology. we sell a clean link you open on your phone and walk through a space as if you were there. smooth, no install, on your own branded URL.</span></p>
+      <div class="tags">
+        <span class="tag">gaussian splatting</span>
+        <span class="tag">RealityScan 2.0</span>
+        <span class="tag">Cloudflare</span>
+        <span class="tag">WebGL</span>
+        <span class="tag">mobile-first</span>
+        <span class="tag">*.flyingcat.services</span>
+      </div>
     </div>
   </div>
 </section>
 
-<div class="dot-divider" aria-hidden="true"><span>·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·</span></div>
+<!-- ═══ DIVIDER 4 ═══ -->
+<div class="dot-divider" aria-hidden="true" data-divider>
+  <canvas></canvas>
+</div>
 
+<!-- ═══ USE CASES ═══ -->
 <section id="usecases" aria-labelledby="uc-heading">
-  <div class="uc-header">
-    <div class="section-label"><span class="num">04</span>&nbsp;&nbsp;<span data-cs>využití</span><span data-en>use cases</span></div>
-    <h2 class="section-title" id="uc-heading"><span data-cs>pro koho prohlídky děláme</span><span data-en>who we work with</span></h2>
-  </div>
-  <div class="uc-grid">
-    <div class="uc-item"><div class="uc-dot-corner"></div><div class="uc-num">·&nbsp;&nbsp;01</div><div class="uc-name"><span data-cs>realitní makléři</span><span data-en>real estate agents</span></div><div class="uc-desc"><span data-cs>nabídněte klientovi virtuální obhlídku ještě před návštěvou. pro luxusní byty, vily, kanceláře — kde záleží na detailu.</span><span data-en>offer clients a virtual walkthrough before they visit. for luxury homes, villas and offices where detail matters.</span></div></div>
-    <div class="uc-item"><div class="uc-dot-corner"></div><div class="uc-num">·&nbsp;&nbsp;02</div><div class="uc-name"><span data-cs>architekti a designéři</span><span data-en>architects & designers</span></div><div class="uc-desc"><span data-cs>zdokumentujte hotový projekt ve fotorealistické věrnosti — pro portfolio, prezentaci nebo soutěž.</span><span data-en>document a finished project in photorealistic fidelity — for portfolio, presentation or competition entries.</span></div></div>
-    <div class="uc-item"><div class="uc-dot-corner"></div><div class="uc-num">·&nbsp;&nbsp;03</div><div class="uc-name"><span data-cs>muzea a galerie</span><span data-en>museums & galleries</span></div><div class="uc-desc"><span data-cs>zpřístupněte výstavu nebo prostor online v plné věrnosti. pro vzdělávání, propagaci nebo archivaci.</span><span data-en>make your exhibition or space available online in full fidelity — for education, promotion or archiving.</span></div></div>
-    <div class="uc-item"><div class="uc-dot-corner"></div><div class="uc-num">·&nbsp;&nbsp;04</div><div class="uc-name"><span data-cs>stavební firmy</span><span data-en>construction firms</span></div><div class="uc-desc"><span data-cs>zachyťte progres stavby v každém milníku. porovnávejte stavy v čase, dokumentujte pro investora.</span><span data-en>capture site progress at every milestone. compare states over time, document for investors.</span></div></div>
-    <div class="uc-item"><div class="uc-dot-corner"></div><div class="uc-num">·&nbsp;&nbsp;05</div><div class="uc-name"><span data-cs>kulturní dědictví</span><span data-en>heritage projects</span></div><div class="uc-desc"><span data-cs>digitálně zachovejte historickou budovu, kostel nebo artefakt v milimetrové přesnosti. pro budoucnost.</span><span data-en>digitally preserve a historical building, church or artefact at millimeter precision. for posterity.</span></div></div>
-    <div class="uc-item"><div class="uc-dot-corner"></div><div class="uc-num">·&nbsp;&nbsp;06</div><div class="uc-name"><span data-cs>hotely a penziony</span><span data-en>hotels & venues</span></div><div class="uc-desc"><span data-cs>ukažte hostům pokoj nebo prostor předem — ne render, ne foto, ale skutečnost. zvyšte rezervace, snižte dotazy.</span><span data-en>show guests a room or venue in advance — not render, not photo, but reality. boost bookings, reduce inquiries.</span></div></div>
+  <div class="uc-inner">
+    <div class="uc-header">
+      <div class="section-label"><span class="num">04</span>&nbsp;&nbsp;<span data-cs>využití</span><span data-en>use cases</span></div>
+      <h2 class="section-title" id="uc-heading"><span data-cs>pro koho prohlídky děláme</span><span data-en>who we work with</span></h2>
+    </div>
+    <div class="uc-grid">
+      <div class="uc-item"><div class="uc-dot-corner"></div><div class="uc-num">·&nbsp;&nbsp;01</div><div class="uc-name"><span data-cs>realitní makléři</span><span data-en>real estate agents</span></div><div class="uc-desc"><span data-cs>nabídněte klientovi virtuální obhlídku ještě před návštěvou. pro luxusní byty, vily, kanceláře — kde záleží na detailu.</span><span data-en>offer clients a virtual walkthrough before they visit. for luxury homes, villas and offices where detail matters.</span></div></div>
+      <div class="uc-item"><div class="uc-dot-corner"></div><div class="uc-num">·&nbsp;&nbsp;02</div><div class="uc-name"><span data-cs>architekti a designéři</span><span data-en>architects & designers</span></div><div class="uc-desc"><span data-cs>zdokumentujte hotový projekt ve fotorealistické věrnosti — pro portfolio, prezentaci nebo soutěž.</span><span data-en>document a finished project in photorealistic fidelity — for portfolio, presentation or competition entries.</span></div></div>
+      <div class="uc-item"><div class="uc-dot-corner"></div><div class="uc-num">·&nbsp;&nbsp;03</div><div class="uc-name"><span data-cs>muzea a galerie</span><span data-en>museums & galleries</span></div><div class="uc-desc"><span data-cs>zpřístupněte výstavu nebo prostor online v plné věrnosti. pro vzdělávání, propagaci nebo archivaci.</span><span data-en>make your exhibition or space available online in full fidelity — for education, promotion or archiving.</span></div></div>
+      <div class="uc-item"><div class="uc-dot-corner"></div><div class="uc-num">·&nbsp;&nbsp;04</div><div class="uc-name"><span data-cs>stavební firmy</span><span data-en>construction firms</span></div><div class="uc-desc"><span data-cs>zachyťte progres stavby v každém milníku. porovnávejte stavy v čase, dokumentujte pro investora.</span><span data-en>capture site progress at every milestone. compare states over time, document for investors.</span></div></div>
+      <div class="uc-item"><div class="uc-dot-corner"></div><div class="uc-num">·&nbsp;&nbsp;05</div><div class="uc-name"><span data-cs>kulturní dědictví</span><span data-en>heritage projects</span></div><div class="uc-desc"><span data-cs>digitálně zachovejte historickou budovu, kostel nebo artefakt v milimetrové přesnosti. pro budoucnost.</span><span data-en>digitally preserve a historical building, church or artefact at millimeter precision. for posterity.</span></div></div>
+      <div class="uc-item"><div class="uc-dot-corner"></div><div class="uc-num">·&nbsp;&nbsp;06</div><div class="uc-name"><span data-cs>hotely a penziony</span><span data-en>hotels & venues</span></div><div class="uc-desc"><span data-cs>ukažte hostům pokoj nebo prostor předem — ne render, ne foto, ale skutečnost. zvyšte rezervace, snižte dotazy.</span><span data-en>show guests a room or venue in advance — not render, not photo, but reality. boost bookings, reduce inquiries.</span></div></div>
+    </div>
   </div>
 </section>
 
-<div class="dot-divider" aria-hidden="true"><span>·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·</span></div>
+<!-- ═══ DIVIDER 5 ═══ -->
+<div class="dot-divider" aria-hidden="true" data-divider>
+  <canvas></canvas>
+</div>
 
+<!-- ═══ CONTACT ═══ -->
 <section id="contact" aria-labelledby="contact-heading">
-  <div class="contact-intro">
-    <div class="section-label"><span class="num">05</span>&nbsp;&nbsp;<span data-cs>kontakt</span><span data-en>contact</span></div>
-    <h2 class="section-title" id="contact-heading"><span data-cs>poptat prohlídku</span><span data-en>request a tour</span></h2>
-    <p class="body-text" style="margin-top:14px;"><span data-cs>napište nám pár vět o prostoru a my se ozveme s návrhem a cenou. obvykle odpovídáme do 24 hodin.</span><span data-en>tell us about your space and we'll come back with a proposal and quote. usually within 24 hours.</span></p>
-    <div class="contact-channels">
-      <div class="channel">
-        <div class="channel-label">e-mail</div>
-        <a href="mailto:matej@flyingcat.services" class="channel-value">matej@flyingcat.services</a>
-      </div>
-      <div class="channel">
-        <div class="channel-label"><span data-cs>oblast</span><span data-en>area</span></div>
-        <div class="channel-value"><span data-cs>česko, slovensko, eu (na vyžádání)</span><span data-en>czechia, slovakia, eu (on request)</span></div>
+  <div class="contact-inner">
+    <div class="contact-intro">
+      <div class="section-label"><span class="num">05</span>&nbsp;&nbsp;<span data-cs>kontakt</span><span data-en>contact</span></div>
+      <h2 class="section-title" id="contact-heading"><span data-cs>poptat prohlídku</span><span data-en>request a tour</span></h2>
+      <p class="body-text" style="margin-top:14px;"><span data-cs>napište nám pár vět o prostoru a my se ozveme s návrhem a cenou. obvykle odpovídáme do 24 hodin.</span><span data-en>tell us about your space and we'll come back with a proposal and quote. usually within 24 hours.</span></p>
+      <div class="contact-channels">
+        <div class="channel">
+          <div class="channel-label">e-mail</div>
+          <a href="mailto:matej@flyingcat.services" class="channel-value">matej@flyingcat.services</a>
+        </div>
+        <div class="channel">
+          <div class="channel-label"><span data-cs>oblast</span><span data-en>area</span></div>
+          <div class="channel-value"><span data-cs>česko, slovensko, eu (na vyžádání)</span><span data-en>czechia, slovakia, eu (on request)</span></div>
+        </div>
       </div>
     </div>
+    <form class="form" id="contact-form" onsubmit="handleSubmit(event)">
+      <div class="form-row">
+        <div class="field">
+          <label for="f-name"><span data-cs>jméno</span><span data-en>name</span></label>
+          <input type="text" id="f-name" name="name" required autocomplete="name">
+        </div>
+        <div class="field">
+          <label for="f-email"><span data-cs>e-mail</span><span data-en>e-mail</span></label>
+          <input type="email" id="f-email" name="email" required autocomplete="email">
+        </div>
+      </div>
+      <div class="field">
+        <label for="f-subject"><span data-cs>typ projektu</span><span data-en>project type</span></label>
+        <select id="f-subject" name="subject">
+          <option value="" disabled selected>—</option>
+          <option value="nemovitost">nemovitost / real estate</option>
+          <option value="architektura">architektura / architecture</option>
+          <option value="kultura">muzeum / galerie / heritage</option>
+          <option value="stavba">stavba / construction</option>
+          <option value="hotel">hotel / venue</option>
+          <option value="jine">jiné / other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="f-message"><span data-cs>zpráva</span><span data-en>message</span></label>
+        <textarea id="f-message" name="message" required></textarea>
+      </div>
+      <button type="submit" class="form-submit"><span data-cs>odeslat</span><span data-en>send</span></button>
+      <div class="form-note" id="form-status"></div>
+    </form>
   </div>
-  <form class="form" id="contact-form" onsubmit="handleSubmit(event)">
-    <div class="form-row">
-      <div class="field">
-        <label for="f-name"><span data-cs>jméno</span><span data-en>name</span></label>
-        <input type="text" id="f-name" name="name" required autocomplete="name">
-      </div>
-      <div class="field">
-        <label for="f-email"><span data-cs>e-mail</span><span data-en>e-mail</span></label>
-        <input type="email" id="f-email" name="email" required autocomplete="email">
-      </div>
-    </div>
-    <div class="field">
-      <label for="f-subject"><span data-cs>typ projektu</span><span data-en>project type</span></label>
-      <select id="f-subject" name="subject">
-        <option value="" disabled selected>—</option>
-        <option value="nemovitost">nemovitost / real estate</option>
-        <option value="architektura">architektura / architecture</option>
-        <option value="kultura">muzeum / galerie / heritage</option>
-        <option value="stavba">stavba / construction</option>
-        <option value="hotel">hotel / venue</option>
-        <option value="jine">jiné / other</option>
-      </select>
-    </div>
-    <div class="field">
-      <label for="f-message"><span data-cs>zpráva</span><span data-en>message</span></label>
-      <textarea id="f-message" name="message" required></textarea>
-    </div>
-    <button type="submit" class="form-submit"><span data-cs>odeslat</span><span data-en>send</span></button>
-    <div class="form-note" id="form-status"></div>
-  </form>
 </section>
 
-<div class="dot-divider" aria-hidden="true"><span>·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·</span></div>
+<!-- ═══ DIVIDER 6 ═══ -->
+<div class="dot-divider" aria-hidden="true" data-divider>
+  <canvas></canvas>
+</div>
 
 <footer>
   <a href="#home" class="footer-logo" aria-label="flyingcat"><img src="logo.png" alt="flyingcat"></a>
@@ -838,91 +911,142 @@ footer {
 </footer>
 
 <script>
-const DOT = {
-  cols:          40,
-  dotRadius:     2.2,
-  radiusActive:  5.0,
-  influence:     160,
-  pushStrength:  30,
-  ease:          0.10,
-  inkRGB:  [10,  10,  10],
-  redRGB:  [184, 49,  44],
+// ═══════════════════════════════════════════════════════════
+// DOT FIELD CONFIG  — globálne parametre pre hero aj dividery
+// ═══════════════════════════════════════════════════════════
+function dotConfigForViewport() {
+  const w = window.innerWidth;
+  if (w <= 600) {
+    // MOBILE — menšie tečky, ale jemne hustejšia mriežka pre živšiu reakciu
+    return {
+      spacing:        18,    // rozteč v px (jednotný raster pre hero aj divider)
+      dotRadius:      1.1,   // o polovicu menšie ako desktop
+      radiusActive:   3.0,
+      influence:      100,
+      pushStrength:   22,
+      ease:           0.10,
+      easeReturn:     0.04,  // pomalšie miznutie "gesta"
+    };
+  }
+  return {
+    // DESKTOP
+    spacing:        24,
+    dotRadius:      2.2,
+    radiusActive:   5.2,
+    influence:      170,
+    pushStrength:   32,
+    ease:           0.12,
+    easeReturn:     0.04,    // pomalý návrat — gesto zostáva citeľné
+  };
+}
+
+const COLORS = {
+  inkRGB: [10, 10, 10],
+  redRGB: [184, 49, 44],
 };
 
-(function () {
-  const section = document.getElementById('home');
-  const canvas  = document.getElementById('dotcanvas');
-  const ctx     = canvas.getContext('2d');
-  let dots = [], W = 0, H = 0, dpr = 1, spacing = 0;
+// ═══════════════════════════════════════════════════════════
+// DOT FIELD ENGINE  — používa sa pre hero (#home) aj dividery
+// ═══════════════════════════════════════════════════════════
+function makeDotField({ container, canvas, isDivider }) {
+  const ctx = canvas.getContext('2d');
+  let dots = [], W = 0, H = 0, dpr = 1;
+  let cfg = dotConfigForViewport();
   const ptr = { x: -9999, y: -9999, active: false };
 
   function build() {
+    cfg = dotConfigForViewport();
     dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const r = section.getBoundingClientRect();
+    const r = container.getBoundingClientRect();
     W = r.width; H = r.height;
     canvas.width  = W * dpr;
     canvas.height = H * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    spacing = W / DOT.cols;
-    const cols = DOT.cols + 1;
-    const rows = Math.ceil(H / spacing) + 1;
-    const ox = (W - (cols - 1) * spacing) / 2;
-    const oy = (H - (rows - 1) * spacing) / 2;
+
+    // jednotný raster: spacing px medzi tečkami, oba smery
+    const cols = Math.floor(W / cfg.spacing) + 2;
+    const rows = Math.floor(H / cfg.spacing) + 2;
+    const ox = (W - (cols - 1) * cfg.spacing) / 2;
+    const oy = (H - (rows - 1) * cfg.spacing) / 2;
+
     dots = [];
     for (let r2 = 0; r2 < rows; r2++) {
       for (let c = 0; c < cols; c++) {
-        const x = ox + c * spacing;
-        const y = oy + r2 * spacing;
+        const x = ox + c * cfg.spacing;
+        const y = oy + r2 * cfg.spacing;
         dots.push({ ox: x, oy: y, x, y, heat: 0 });
       }
     }
   }
 
   function setPtr(cx, cy, active) {
-    const r = section.getBoundingClientRect();
+    const r = container.getBoundingClientRect();
     ptr.x = cx - r.left;
     ptr.y = cy - r.top;
     ptr.active = active;
-    if (active) section.classList.add('touched');
+    if (active) container.classList.add('touched');
   }
 
-  section.addEventListener('mousemove',  e => setPtr(e.clientX, e.clientY, ptr.active));
-  section.addEventListener('mousedown',  e => setPtr(e.clientX, e.clientY, true));
-  window .addEventListener('mouseup',    () => { ptr.active = false; });
-  section.addEventListener('mouseleave', () => { ptr.x = -9999; ptr.y = -9999; });
-  section.addEventListener('touchstart', e => { const t = e.touches[0]; setPtr(t.clientX, t.clientY, true); }, { passive: true });
-  section.addEventListener('touchmove',  e => { const t = e.touches[0]; setPtr(t.clientX, t.clientY, true); }, { passive: true });
-  section.addEventListener('touchend',   () => { ptr.active = false; ptr.x = -9999; ptr.y = -9999; });
+  // Mouse
+  container.addEventListener('mousemove', e => setPtr(e.clientX, e.clientY, ptr.active));
+  container.addEventListener('mousedown', e => setPtr(e.clientX, e.clientY, true));
+  window.addEventListener('mouseup', () => { ptr.active = false; });
+  container.addEventListener('mouseleave', () => { ptr.x = -9999; ptr.y = -9999; });
+
+  // Touch — dividery dovoľujú scroll (passive: true)
+  const touchOpts = { passive: true };
+  container.addEventListener('touchstart', e => {
+    const t = e.touches[0];
+    setPtr(t.clientX, t.clientY, true);
+  }, touchOpts);
+  container.addEventListener('touchmove', e => {
+    const t = e.touches[0];
+    setPtr(t.clientX, t.clientY, true);
+  }, touchOpts);
+  container.addEventListener('touchend', () => {
+    ptr.active = false;
+    ptr.x = -9999; ptr.y = -9999;
+  });
 
   function lerp(a, b, t) { return a + (b - a) * t; }
 
   function frame() {
     ctx.clearRect(0, 0, W, H);
-    const inf2 = DOT.influence * DOT.influence;
+    const inf2 = cfg.influence * cfg.influence;
+
     for (let i = 0; i < dots.length; i++) {
       const d = dots[i];
       let tx = d.ox, ty = d.oy, th = 0;
+
       if (ptr.x > -9000) {
         const dx = d.ox - ptr.x;
         const dy = d.oy - ptr.y;
         const dist2 = dx * dx + dy * dy;
         if (dist2 < inf2) {
           const dist = Math.sqrt(dist2) || 0.0001;
-          let t = 1 - dist / DOT.influence;
-          t = t * t * (3 - 2 * t);
-          const push = DOT.pushStrength * t;
+          let t = 1 - dist / cfg.influence;
+          t = t * t * (3 - 2 * t);   // smoothstep
+          const push = cfg.pushStrength * t;
           tx = d.ox + (dx / dist) * push;
           ty = d.oy + (dy / dist) * push;
-          th = t * (ptr.active ? 1 : 0.5);
+          th = t * (ptr.active ? 1 : 0.55);
         }
       }
-      d.x    = lerp(d.x,    tx, DOT.ease);
-      d.y    = lerp(d.y,    ty, DOT.ease);
-      d.heat = lerp(d.heat, th, DOT.ease);
-      const r = Math.round(lerp(DOT.inkRGB[0], DOT.redRGB[0], d.heat));
-      const g = Math.round(lerp(DOT.inkRGB[1], DOT.redRGB[1], d.heat));
-      const b = Math.round(lerp(DOT.inkRGB[2], DOT.redRGB[2], d.heat));
-      const radius = lerp(DOT.dotRadius, DOT.radiusActive, d.heat);
+
+      // pomalší návrat = gesto zostáva citeľné
+      const easeIn  = cfg.ease;
+      const easeOut = cfg.easeReturn;
+      const isReturning = th < d.heat;
+
+      d.x    = lerp(d.x,    tx, isReturning ? easeOut : easeIn);
+      d.y    = lerp(d.y,    ty, isReturning ? easeOut : easeIn);
+      d.heat = lerp(d.heat, th, isReturning ? easeOut : easeIn);
+
+      const r = Math.round(lerp(COLORS.inkRGB[0], COLORS.redRGB[0], d.heat));
+      const g = Math.round(lerp(COLORS.inkRGB[1], COLORS.redRGB[1], d.heat));
+      const b = Math.round(lerp(COLORS.inkRGB[2], COLORS.redRGB[2], d.heat));
+      const radius = lerp(cfg.dotRadius, cfg.radiusActive, d.heat);
+
       ctx.beginPath();
       ctx.fillStyle = `rgb(${r},${g},${b})`;
       ctx.arc(d.x, d.y, radius, 0, Math.PI * 2);
@@ -935,8 +1059,24 @@ const DOT = {
   frame();
   let rt;
   window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(build, 150); });
-})();
+}
 
+// ── Hero ──
+makeDotField({
+  container: document.getElementById('home'),
+  canvas:    document.getElementById('dotcanvas'),
+  isDivider: false
+});
+
+// ── Všetky dividery ──
+document.querySelectorAll('[data-divider]').forEach(div => {
+  const canvas = div.querySelector('canvas');
+  makeDotField({ container: div, canvas: canvas, isDivider: true });
+});
+
+// ═══════════════════════════════════════════════════════════
+// GALLERY DATA
+// ═══════════════════════════════════════════════════════════
 const TOURS = [
   { slug: 'testing-x01', name_cs: 'testovací scéna', name_en: 'test scene', type_cs: 'demo · 2025', type_en: 'demo · 2025' },
 ];
@@ -965,6 +1105,7 @@ function buildGallery() {
   count.textContent = `${TOURS.length} ${word}`;
 }
 
+// ── Modal ──
 let currentUrl = '';
 function openModal(url, name) {
   currentUrl = url;
@@ -986,6 +1127,7 @@ function openFullscreen() {
 document.getElementById('modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
+// ── Language ──
 function setLang(lang) {
   document.body.className = lang === 'en' ? 'lang-en' : 'lang-cs';
   document.documentElement.lang = lang;
@@ -997,6 +1139,7 @@ function setLang(lang) {
   buildGallery();
 }
 
+// ── Mobile menu ──
 function toggleMenu() {
   document.getElementById('hamburger').classList.toggle('open');
   document.getElementById('nav-drawer').classList.toggle('open');
@@ -1006,6 +1149,7 @@ function closeMenu() {
   document.getElementById('nav-drawer').classList.remove('open');
 }
 
+// ── Active nav on scroll ──
 const sections = ['home','gallery','process','about','usecases','contact'];
 const observer = new IntersectionObserver(entries => {
   entries.forEach(entry => {
@@ -1018,6 +1162,7 @@ const observer = new IntersectionObserver(entries => {
 }, { threshold: 0.25, rootMargin: '-68px 0px 0px 0px' });
 sections.forEach(id => { const el = document.getElementById(id); if (el) observer.observe(el); });
 
+// ── Contact form ──
 function handleSubmit(e) {
   e.preventDefault();
   const f = e.target;
@@ -1028,6 +1173,7 @@ function handleSubmit(e) {
   document.getElementById('form-status').textContent = lang === 'en' ? 'opening your mail client…' : 'otevírám váš e-mailový klient…';
 }
 
+// Init
 setLang(localStorage.getItem('fc-lang') || 'cs');
 buildGallery();
 </script>
