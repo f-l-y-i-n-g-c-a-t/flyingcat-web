@@ -25,13 +25,13 @@
   --cloud: #F0F0EC;
   --mono:  'JetBrains Mono', monospace;
 
-  /* MAX-WIDTH KONTAJNER PRE 4K (programátor + dizajnér + typograf) */
+  /* MAX-WIDTH KONTAJNER PRE 4K */
   --max-w: 1440px;
 
   --pad-x: 40px;
   --pad-x-mob: 20px;
-  --nav-h: 68px;
-  --section-pad-y: 88px;     /* väčší spacing medzi sekciami (3 hlasy) */
+  --nav-h: 88px;
+  --section-pad-y: 88px;     /* väčší spacing medzi sekciami */
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -51,7 +51,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Reduced motion fallback (typograf + programátor)  */
+/* Reduced motion fallback  */
 @media (prefers-reduced-motion: reduce) {
   .hero-loader .d,
   .dot-divider span {
@@ -81,18 +81,18 @@ body {
 .section-label .num { color: var(--red); }
 
 .section-title {
-  font-size: 28px;                /* zväčšené pre kontrast (typograf) */
-  font-weight: 500;               /* viac váhy (typograf) */
+  font-size: 28px;                /* zväčšené pre kontrast */
+  font-weight: 500;               /* viac váhy */
   letter-spacing: 0;
   color: var(--ink);
   line-height: 1.2;
 }
 
 .body-text {
-  font-size: 15px;                /* zväčšené z 14 (typograf) */
+  font-size: 15px;                /* zväčšené z 14 */
   line-height: 1.75;
   color: var(--mid);
-  max-width: 60ch;                /* riadky nie sú nekonečné (typograf) */
+  max-width: 60ch;                /* riadky nie sú nekonečné */
 }
 
 [data-en] { display: none; }
@@ -137,7 +137,7 @@ body {
   gap: 24px;
 }
 
-.nav-logo { height: 40px; display: block; flex-shrink: 0; }
+.nav-logo { height: 60px; display: block; flex-shrink: 0; }
 .nav-logo img { height: 100%; width: auto; display: block; }
 
 .nav-links {
@@ -192,7 +192,7 @@ body {
   background: transparent;
   border: 1px solid var(--ink);
   color: var(--ink);
-  padding: 10px 18px;             /* väčší touch target (dizajnér + laik) */
+  padding: 10px 18px;             /* väčší touch target */
   cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
   white-space: nowrap;
@@ -245,12 +245,15 @@ body {
   position: relative;
   width: 100%;
   min-height: calc(100vh - var(--nav-h));
+  min-height: calc(100dvh - var(--nav-h));
   display: flex;
   align-items: center;
   overflow: hidden;
-  touch-action: none;             /* dotfield: ŽIADNY scrolling, len interakcia */
+  touch-action: pan-y;            /* vertikálny scroll funguje, horizontálny ťah = interakcia */
   cursor: crosshair;
 }
+#home.launching { cursor: default; }
+#home.launching #dothint { opacity: 0; }
 
 #dotcanvas {
   position: absolute;
@@ -276,13 +279,23 @@ body {
 .hero-content a,
 .hero-content button { pointer-events: auto; }
 
-/* Hero H1 — DRAMATICKY VÄČŠÍ (typograf, umelec, dizajnér — TROJZHODA) */
+/* text odíde doľava pri spustení prohliadky */
+.hero-content {
+  transition: opacity 0.55s cubic-bezier(0.16,1,0.3,1),
+              transform 0.55s cubic-bezier(0.16,1,0.3,1);
+  will-change: opacity, transform;
+}
+.hero-content.away { opacity: 0; transform: translateX(-52px); }
+.hero-content.away a,
+.hero-content.away button { pointer-events: none; }
+
+/* Hero H1 — DRAMATICKY VÄČŠÍ */
 .hero-h1 {
   font-size: clamp(40px, 7vw, 88px);
-  font-weight: 500;               /* viac váhy (typograf) */
-  letter-spacing: 0.06em;         /* zmenšené (typograf) */
+  font-weight: 500;               /* viac váhy */
+  letter-spacing: 0.06em;         /* zmenšené */
   text-transform: lowercase;
-  line-height: 1.05;              /* tesnejší riadkový riadok (typograf) */
+  line-height: 1.05;              /* tesnejší riadkový riadok */
   color: var(--ink);
   margin-bottom: 24px;
 }
@@ -417,13 +430,17 @@ body {
    TOUR MODAL
 ═══════════════════════════════════════ */
 .modal-overlay {
-  display: none; position: fixed; inset: 0;
+  display: flex; position: fixed; inset: 0;
   background: rgba(10,10,10,0.88);
   z-index: 500;
   align-items: center; justify-content: center;
   padding: 24px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.45s ease, visibility 0.45s ease;
 }
-.modal-overlay.open { display: flex; }
+.modal-overlay.open { opacity: 1; visibility: visible; pointer-events: auto; }
 .modal-box {
   background: var(--cloud);
   border: 1px solid var(--light);
@@ -606,7 +623,7 @@ footer {
   max-width: var(--max-w);
   margin: 0 auto;
 }
-.footer-logo { height: 32px; display: block; }
+.footer-logo { height: 46px; display: block; }
 .footer-logo img { height: 100%; width: auto; display: block; }
 .footer-info { display: flex; flex-direction: column; gap: 4px; align-items: center; text-align: center; }
 .footer-url { font-size: 12px; letter-spacing: 0.05em; color: var(--ink); }
@@ -635,7 +652,7 @@ footer {
 @media (max-width: 600px) {
   :root { --section-pad-y: 56px; --pad-x: 20px; }
   .nav { padding: 0 var(--pad-x-mob); }
-  .nav-logo { height: 34px; }
+  .nav-logo { height: 46px; }
   .gallery-grid { grid-template-columns: 1fr; }
   .gallery-header { flex-direction: column; align-items: flex-start; gap: 8px; }
   .form-row { grid-template-columns: 1fr; }
@@ -711,7 +728,7 @@ footer {
     </div>
   </div>
   <div id="dothint" aria-hidden="true">
-    <span data-cs>dotkni sa a ťahaj</span><span data-en>touch and drag</span>
+    <span data-cs>dotkni se a táhni</span><span data-en>touch and drag</span>
   </div>
 </section>
 
@@ -911,59 +928,146 @@ footer {
 </footer>
 
 <script>
-// ═══════════════════════════════════════════════════════════
-// DOT FIELD CONFIG  — globálne parametre pre hero aj dividery
-// ═══════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
+// DOT FIELD — interaktívne pole + 3 intro animácie + launch sekvencia
+// ════════════════════════════════════════════════════════════
+
+// ── viewport config ──
 function dotConfigForViewport() {
   const w = window.innerWidth;
   if (w <= 600) {
-    // MOBILE — menšie tečky, ale jemne hustejšia mriežka pre živšiu reakciu
-    return {
-      spacing:        18,    // rozteč v px (jednotný raster pre hero aj divider)
-      dotRadius:      1.1,   // o polovicu menšie ako desktop
-      radiusActive:   3.0,
-      influence:      100,
-      pushStrength:   22,
-      ease:           0.10,
-      easeReturn:     0.04,  // pomalšie miznutie "gesta"
-    };
+    return { spacing: 18, dotRadius: 1.1, radiusActive: 3.0, influence: 100, pushStrength: 22, ease: 0.10, easeReturn: 0.04 };
   }
-  return {
-    // DESKTOP
-    spacing:        24,
-    dotRadius:      2.2,
-    radiusActive:   5.2,
-    influence:      170,
-    pushStrength:   32,
-    ease:           0.12,
-    easeReturn:     0.04,    // pomalý návrat — gesto zostáva citeľné
-  };
+  return { spacing: 24, dotRadius: 2.2, radiusActive: 5.2, influence: 170, pushStrength: 32, ease: 0.12, easeReturn: 0.04 };
 }
 
-const COLORS = {
-  inkRGB: [10, 10, 10],
-  redRGB: [184, 49, 44],
-};
+const COLORS = { inkRGB: [10, 10, 10], redRGB: [184, 49, 44] };
 
-// ═══════════════════════════════════════════════════════════
-// DOT FIELD ENGINE  — používa sa pre hero (#home) aj dividery
-// ═══════════════════════════════════════════════════════════
-function makeDotField({ container, canvas, isDivider }) {
+// ── helpers ──
+const easeInCubic  = t => t * t * t;
+const easeInQuad   = t => t * t;
+const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+const clampN = (v, a, b) => v < a ? a : (v > b ? b : v);
+
+// ════════════════════════════════════════════════════════════
+// INTRO ANIMÁCIE — každá je čistá funkcia (d, p, t, E)
+//   E = { W, H, spacing }
+//   štart: tečka v rastri (ox/oy) → odíde z obrazu (žiadny návrat)
+//   nastavuje: d.x, d.y, d.heat, d.alpha
+// ════════════════════════════════════════════════════════════
+
+// 1 — ZÁVĚSY: od stredu sa rozhrnú do strán ako opona, nepravidelné vlny
+function introZaves(d, p, t, E) {
+  const cx = E.W / 2;
+  let side = d.ox < cx ? -1 : 1;
+  if (Math.abs(d.ox - cx) < E.spacing * 0.5) side = (d.col % 2 === 0) ? -1 : 1;
+
+  const hx = Math.abs(d.ox - cx) / (E.W / 2);
+  const y = d.oy;
+  const wave =
+      Math.sin(y * 0.020 + t * 0.0022 + 0.0) * 0.55 +
+      Math.sin(y * 0.013 + t * 0.0015 + 2.1) * 0.30 +
+      Math.sin(y * 0.031 + t * 0.0031 + 4.2) * 0.18;
+  const releaseP = clampN(hx * 0.5 + wave * 0.12, 0, 0.9);
+
+  const lp = clampN((p - releaseP) / (1 - releaseP), 0, 1);
+  const e = easeInCubic(lp);
+  const travel = side * (E.W * 1.15) * e;
+  const wob = Math.sin(y * 0.05 + t * 0.004 + d.seed * 6.283) * 5 * lp;
+
+  d.x = d.ox + travel;
+  d.y = d.oy + wob;
+  d.heat = clampN(1 - lp * 1.8, 0, 1) * (lp > 0 ? 1 : 0) * 0.6;
+  d.alpha = 1;
+}
+
+// 2 — PÁD: uvoľnia sa a padajú dole s gravitáciou, rozfázovane, bez odrazu
+function introPad(d, p, t, E) {
+  const releaseP = clampN(d.seed * 0.38 + (d.row / d.rows) * 0.06, 0, 0.45);
+  const lt = p - releaseP;
+  if (lt <= 0) {
+    const near = clampN(1 + lt * 8, 0, 1);
+    d.x = d.ox + (d.seed - 0.5) * near * 1.2;
+    d.y = d.oy;
+    d.heat = 0; d.alpha = 1;
+    return;
+  }
+  const fall  = lt * lt * E.H * 4.2;
+  const drift = (d.seed - 0.5) * 26 * lt;
+  d.x = d.ox + drift;
+  d.y = d.oy + fall;
+  d.heat = clampN(0.5 - lt * 5, 0, 1) * 0.5;
+  d.alpha = 1;
+}
+
+// 3 — KOULE: zo stredu sa priženie guľa, roztrhne obraz, tečky von do všetkých strán
+function introKoule(d, p, t, E) {
+  const cx = E.W / 2, cy = E.H / 2;
+  const maxR = Math.hypot(E.W, E.H) / 2 * 1.05;
+  const dx = d.ox - cx, dy = d.oy - cy;
+  let dist = Math.hypot(dx, dy);
+  if (dist < 0.0001) dist = 0.0001;
+  const ang = Math.atan2(dy, dx) + (d.seed - 0.5) * 0.22;
+  const ux = Math.cos(ang), uy = Math.sin(ang);
+
+  const P_ANT = 0.16;
+  if (p < P_ANT) {                                   // napätie: guľa sa priženie, stred žiari
+    const a = p / P_ANT;
+    const pull = easeInQuad(a) * 8;
+    const tj = (d.seed - 0.5) * a * 2;
+    d.x = d.ox - ux * pull + tj;
+    d.y = d.oy - uy * pull + tj;
+    d.heat = clampN(1 - dist / (maxR * 0.6), 0, 1) * a * 0.7;
+    d.alpha = 1;
+    return;
+  }
+
+  const ep = (p - P_ANT) / (1 - P_ANT);              // explózia
+  const waveR = easeOutCubic(ep) * maxR * 1.7;
+  const hit = waveR - dist;
+  if (hit <= 0) {
+    const near = clampN(1 - (dist - waveR) / (maxR * 0.22), 0, 1);
+    const tj = (d.seed - 0.5) * near * 3;
+    d.x = d.ox + tj;
+    d.y = d.oy + tj;
+    d.heat = near * 0.28;
+    d.alpha = 1;
+  } else {
+    const excess = hit / maxR;
+    const thr = Math.pow(excess, 0.82) * maxR * 2.2 * (0.85 + d.seed * 0.3);
+    d.x = d.ox + ux * thr;
+    d.y = d.oy + uy * thr;
+    d.heat  = clampN(1 - excess * 2.4, 0, 1);
+    d.alpha = clampN(1 - excess * 1.0, 0, 1);
+  }
+}
+
+const INTRO_ANIMS = [introZaves, introPad, introKoule];
+const INTRO_DUR_MS = 5000;   // dĺžka intro animácie (laditeľné)
+
+// ════════════════════════════════════════════════════════════
+// DOT FIELD ENGINE  — hero (interactive + intro) aj dividery (len interactive)
+//   perf: rAF beží len keď je pole viditeľné a niečo sa deje
+// ════════════════════════════════════════════════════════════
+function makeDotField({ container, canvas, enableIntro }) {
   const ctx = canvas.getContext('2d');
   let dots = [], W = 0, H = 0, dpr = 1;
   let cfg = dotConfigForViewport();
   const ptr = { x: -9999, y: -9999, active: false };
+
+  let mode = 'interactive';   // interactive | hold | intro | cleared
+  let introAnim = null, introStart = 0, introDone = null;
+
+  let running = false, visible = true, settled = false;
 
   function build() {
     cfg = dotConfigForViewport();
     dpr = Math.min(window.devicePixelRatio || 1, 2);
     const r = container.getBoundingClientRect();
     W = r.width; H = r.height;
-    canvas.width  = W * dpr;
-    canvas.height = H * dpr;
+    canvas.width = W * dpr; canvas.height = H * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    // jednotný raster: spacing px medzi tečkami, oba smery
     const cols = Math.floor(W / cfg.spacing) + 2;
     const rows = Math.floor(H / cfg.spacing) + 2;
     const ox = (W - (cols - 1) * cfg.spacing) / 2;
@@ -972,111 +1076,156 @@ function makeDotField({ container, canvas, isDivider }) {
     dots = [];
     for (let r2 = 0; r2 < rows; r2++) {
       for (let c = 0; c < cols; c++) {
-        const x = ox + c * cfg.spacing;
-        const y = oy + r2 * cfg.spacing;
-        dots.push({ ox: x, oy: y, x, y, heat: 0 });
+        const x = ox + c * cfg.spacing, y = oy + r2 * cfg.spacing;
+        dots.push({ ox: x, oy: y, x, y, heat: 0, alpha: 1, seed: Math.random(), col: c, row: r2, cols, rows });
       }
     }
+    settled = false;
   }
 
   function setPtr(cx, cy, active) {
     const r = container.getBoundingClientRect();
-    ptr.x = cx - r.left;
-    ptr.y = cy - r.top;
-    ptr.active = active;
+    ptr.x = cx - r.left; ptr.y = cy - r.top; ptr.active = active;
     if (active) container.classList.add('touched');
+    settled = false; ensureRunning();
   }
-
-  // Mouse
-  container.addEventListener('mousemove', e => setPtr(e.clientX, e.clientY, ptr.active));
-  container.addEventListener('mousedown', e => setPtr(e.clientX, e.clientY, true));
+  // pointer — meaningful only in interactive mode
+  container.addEventListener('mousemove', e => { if (mode === 'interactive') setPtr(e.clientX, e.clientY, ptr.active); });
+  container.addEventListener('mousedown', e => { if (mode === 'interactive') setPtr(e.clientX, e.clientY, true); });
   window.addEventListener('mouseup', () => { ptr.active = false; });
   container.addEventListener('mouseleave', () => { ptr.x = -9999; ptr.y = -9999; });
-
-  // Touch — dividery dovoľujú scroll (passive: true)
-  const touchOpts = { passive: true };
-  container.addEventListener('touchstart', e => {
-    const t = e.touches[0];
-    setPtr(t.clientX, t.clientY, true);
-  }, touchOpts);
-  container.addEventListener('touchmove', e => {
-    const t = e.touches[0];
-    setPtr(t.clientX, t.clientY, true);
-  }, touchOpts);
-  container.addEventListener('touchend', () => {
-    ptr.active = false;
-    ptr.x = -9999; ptr.y = -9999;
-  });
+  const tOpts = { passive: true };
+  container.addEventListener('touchstart', e => { if (mode === 'interactive') { const t = e.touches[0]; setPtr(t.clientX, t.clientY, true); } }, tOpts);
+  container.addEventListener('touchmove',  e => { if (mode === 'interactive') { const t = e.touches[0]; setPtr(t.clientX, t.clientY, true); } }, tOpts);
+  container.addEventListener('touchend', () => { ptr.active = false; ptr.x = -9999; ptr.y = -9999; });
 
   function lerp(a, b, t) { return a + (b - a) * t; }
 
-  function frame() {
-    ctx.clearRect(0, 0, W, H);
-    const inf2 = cfg.influence * cfg.influence;
+  function drawDot(d) {
+    const a = d.alpha;
+    if (a <= 0.01) return;
+    if (d.x < -24 || d.x > W + 24 || d.y < -24 || d.y > H + 24) return;
+    const r = Math.round(lerp(COLORS.inkRGB[0], COLORS.redRGB[0], d.heat));
+    const g = Math.round(lerp(COLORS.inkRGB[1], COLORS.redRGB[1], d.heat));
+    const b = Math.round(lerp(COLORS.inkRGB[2], COLORS.redRGB[2], d.heat));
+    const radius = lerp(cfg.dotRadius, cfg.radiusActive, d.heat);
+    ctx.globalAlpha = a;
+    ctx.beginPath();
+    ctx.fillStyle = `rgb(${r},${g},${b})`;
+    ctx.arc(d.x, d.y, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
 
+  function ensureRunning() { if (!running) { running = true; requestAnimationFrame(frame); } }
+
+  function frame(now) {
+    ctx.clearRect(0, 0, W, H);
+
+    if (mode === 'cleared') { running = false; return; }
+
+    if (mode === 'intro') {
+      const p = Math.min((now - introStart) / INTRO_DUR_MS, 1);
+      const E = { W, H, spacing: cfg.spacing };
+      for (let i = 0; i < dots.length; i++) { introAnim(dots[i], p, now - introStart, E); drawDot(dots[i]); }
+      if (p >= 1) {
+        mode = 'cleared';
+        const cb = introDone; introDone = null; introAnim = null;
+        if (cb) cb();
+      }
+      requestAnimationFrame(frame);
+      return;
+    }
+
+    if (mode === 'hold') {
+      for (let i = 0; i < dots.length; i++) {
+        const d = dots[i];
+        d.x = d.ox + Math.sin(now * 0.0011 + d.seed * 6.283) * 0.6;
+        d.y = d.oy + Math.cos(now * 0.0009 + d.seed * 6.283) * 0.6;
+        d.heat = 0; d.alpha = 1;
+        drawDot(d);
+      }
+      requestAnimationFrame(frame);
+      return;
+    }
+
+    // interactive
+    if (!visible) { running = false; return; }      // off-screen → stop rAF (perf)
+    const inf2 = cfg.influence * cfg.influence;
+    let moving = false;
     for (let i = 0; i < dots.length; i++) {
       const d = dots[i];
       let tx = d.ox, ty = d.oy, th = 0;
-
       if (ptr.x > -9000) {
-        const dx = d.ox - ptr.x;
-        const dy = d.oy - ptr.y;
+        const dx = d.ox - ptr.x, dy = d.oy - ptr.y;
         const dist2 = dx * dx + dy * dy;
         if (dist2 < inf2) {
           const dist = Math.sqrt(dist2) || 0.0001;
-          let t = 1 - dist / cfg.influence;
-          t = t * t * (3 - 2 * t);   // smoothstep
-          const push = cfg.pushStrength * t;
+          let tt = 1 - dist / cfg.influence; tt = tt * tt * (3 - 2 * tt);
+          const push = cfg.pushStrength * tt;
           tx = d.ox + (dx / dist) * push;
           ty = d.oy + (dy / dist) * push;
-          th = t * (ptr.active ? 1 : 0.55);
+          th = tt * (ptr.active ? 1 : 0.55);
         }
       }
-
-      // pomalší návrat = gesto zostáva citeľné
-      const easeIn  = cfg.ease;
-      const easeOut = cfg.easeReturn;
       const isReturning = th < d.heat;
-
-      d.x    = lerp(d.x,    tx, isReturning ? easeOut : easeIn);
-      d.y    = lerp(d.y,    ty, isReturning ? easeOut : easeIn);
-      d.heat = lerp(d.heat, th, isReturning ? easeOut : easeIn);
-
-      const r = Math.round(lerp(COLORS.inkRGB[0], COLORS.redRGB[0], d.heat));
-      const g = Math.round(lerp(COLORS.inkRGB[1], COLORS.redRGB[1], d.heat));
-      const b = Math.round(lerp(COLORS.inkRGB[2], COLORS.redRGB[2], d.heat));
-      const radius = lerp(cfg.dotRadius, cfg.radiusActive, d.heat);
-
-      ctx.beginPath();
-      ctx.fillStyle = `rgb(${r},${g},${b})`;
-      ctx.arc(d.x, d.y, radius, 0, Math.PI * 2);
-      ctx.fill();
+      const e = isReturning ? cfg.easeReturn : cfg.ease;
+      d.x = lerp(d.x, tx, e);
+      d.y = lerp(d.y, ty, e);
+      d.heat = lerp(d.heat, th, e);
+      d.alpha = 1;
+      if (Math.abs(d.x - d.ox) > 0.15 || Math.abs(d.y - d.oy) > 0.15 || d.heat > 0.01) moving = true;
+      drawDot(d);
     }
+    if (!moving && ptr.x < -9000) { settled = true; running = false; return; }  // idle → stop
     requestAnimationFrame(frame);
   }
 
+  // ── controller (hero) ──
+  function hold() { mode = 'hold'; ensureRunning(); }
+  function playIntro(animFn, onDone) {
+    introAnim = animFn || INTRO_ANIMS[0];
+    introStart = performance.now();
+    introDone = onDone || null;
+    mode = 'intro';
+    ensureRunning();
+  }
+  function reset() {
+    for (const d of dots) { d.x = d.ox; d.y = d.oy; d.heat = 0; d.alpha = 1; }
+    ptr.x = -9999; ptr.y = -9999;
+    mode = 'interactive'; settled = false;
+    ensureRunning();
+  }
+
+  // ── visibility (perf): pauza mimo obrazovky ──
+  new IntersectionObserver(es => {
+    es.forEach(en => {
+      visible = en.isIntersecting;
+      if (visible) { if (mode === 'interactive') settled = false; ensureRunning(); }
+    });
+  }, { threshold: 0 }).observe(container);
+
   build();
-  frame();
+  ensureRunning();
   let rt;
-  window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(build, 150); });
+  window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { build(); ensureRunning(); }, 150); });
+
+  return { hold, playIntro, reset };
 }
 
-// ── Hero ──
-makeDotField({
+// ── inštancie ──
+const hero = makeDotField({
   container: document.getElementById('home'),
   canvas:    document.getElementById('dotcanvas'),
-  isDivider: false
+  enableIntro: true
 });
-
-// ── Všetky dividery ──
 document.querySelectorAll('[data-divider]').forEach(div => {
-  const canvas = div.querySelector('canvas');
-  makeDotField({ container: div, canvas: canvas, isDivider: true });
+  makeDotField({ container: div, canvas: div.querySelector('canvas'), enableIntro: false });
 });
 
-// ═══════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
 // GALLERY DATA
-// ═══════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
 const TOURS = [
   { slug: 'testing-x01', name_cs: 'testovací scéna', name_en: 'test scene', type_cs: 'demo · 2025', type_en: 'demo · 2025' },
 ];
@@ -1097,39 +1246,73 @@ function buildGallery() {
     card.setAttribute('tabindex', '0');
     card.setAttribute('aria-label', name);
     card.innerHTML = `<div class="g-thumb"><div class="g-dots"></div><div class="g-overlay"><div class="play-btn">▶</div></div></div><div class="g-meta"><div class="g-name">${name}</div><div class="g-info">${type}</div></div>`;
-    card.addEventListener('click', () => openModal(url, name));
-    card.addEventListener('keydown', e => { if (e.key === 'Enter') openModal(url, name); });
+    card.addEventListener('click', () => launchTour(url, name));
+    card.addEventListener('keydown', e => { if (e.key === 'Enter') launchTour(url, name); });
     grid.appendChild(card);
   });
   const word = lang === 'en' ? (TOURS.length === 1 ? 'scene' : 'scenes') : (TOURS.length === 1 ? 'scéna' : TOURS.length < 5 ? 'scény' : 'scén');
   count.textContent = `${TOURS.length} ${word}`;
 }
 
-// ── Modal ──
+// ════════════════════════════════════════════════════════════
+// LAUNCH SEKVENCIA
+//   klik na prohliadku → scroll hore → text doľava → klid →
+//   náhodná animácia → spustí sa prohliadka (iframe sa načítava už počas animácie)
+// ════════════════════════════════════════════════════════════
+const INTRO_HOLD_MS = 2600;   // klid v rastri pred animáciou (laditeľné, ~"po troch sekundách")
 let currentUrl = '';
-function openModal(url, name) {
+let launchTimer = null;
+
+function prepareTour(url, name) {
   currentUrl = url;
   document.getElementById('modal-title').textContent = name;
-  document.getElementById('modal-iframe-wrap').innerHTML = `<iframe src="${url}" title="${name}" allowfullscreen loading="lazy"></iframe>`;
+  // iframe sa vloží hneď a začne načítavať (modal je skrytý cez visibility) → animácia kryje load
+  document.getElementById('modal-iframe-wrap').innerHTML =
+    `<iframe src="${url}" title="${name}" allowfullscreen loading="eager"></iframe>`;
+}
+
+function launchTour(url, name) {
+  prepareTour(url, name);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  document.getElementById('home').classList.add('launching');
+  document.querySelector('.hero-content').classList.add('away');
+  hero.hold();
+  const pick = INTRO_ANIMS[Math.floor(Math.random() * INTRO_ANIMS.length)];
+  clearTimeout(launchTimer);
+  launchTimer = setTimeout(() => hero.playIntro(pick, revealTour), INTRO_HOLD_MS);
+  // zamkni scroll až keď doscrolluje hore (nech smooth scroll dobehne)
+  setTimeout(() => {
+    if (document.getElementById('home').classList.contains('launching')) document.body.style.overflow = 'hidden';
+  }, 650);
+}
+
+function revealTour() {
   document.getElementById('modal').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
+
 function closeModal() {
+  clearTimeout(launchTimer);
   document.getElementById('modal').classList.remove('open');
   document.getElementById('modal-iframe-wrap').innerHTML = '';
   document.body.style.overflow = '';
+  document.getElementById('home').classList.remove('launching');
+  document.querySelector('.hero-content').classList.remove('away');
+  hero.reset();
 }
+
 function openFullscreen() {
   const iframe = document.querySelector('#modal-iframe-wrap iframe');
   if (iframe && iframe.requestFullscreen) iframe.requestFullscreen();
   else if (currentUrl) window.open(currentUrl, '_blank');
 }
-document.getElementById('modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+document.getElementById('modal').addEventListener('click', function (e) { if (e.target === this) closeModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
 // ── Language ──
 function setLang(lang) {
-  document.body.className = lang === 'en' ? 'lang-en' : 'lang-cs';
+  document.body.classList.remove('lang-cs', 'lang-en');
+  document.body.classList.add(lang === 'en' ? 'lang-en' : 'lang-cs');
   document.documentElement.lang = lang;
   ['', '-m'].forEach(s => {
     document.getElementById('btn-cs' + s)?.classList.toggle('active', lang === 'cs');
@@ -1149,9 +1332,10 @@ function closeMenu() {
   document.getElementById('nav-drawer').classList.remove('open');
 }
 
-// ── Active nav on scroll ──
-const sections = ['home','gallery','process','about','usecases','contact'];
-const observer = new IntersectionObserver(entries => {
+// ── Active nav on scroll (rootMargin odvodený z --nav-h) ──
+const navH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) || 88;
+const sections = ['home', 'gallery', 'process', 'about', 'usecases', 'contact'];
+const navObserver = new IntersectionObserver(entries => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
       document.querySelectorAll('.nav-links a').forEach(a => {
@@ -1159,8 +1343,8 @@ const observer = new IntersectionObserver(entries => {
       });
     }
   });
-}, { threshold: 0.25, rootMargin: '-68px 0px 0px 0px' });
-sections.forEach(id => { const el = document.getElementById(id); if (el) observer.observe(el); });
+}, { threshold: 0.25, rootMargin: `-${navH}px 0px 0px 0px` });
+sections.forEach(id => { const el = document.getElementById(id); if (el) navObserver.observe(el); });
 
 // ── Contact form ──
 function handleSubmit(e) {
@@ -1173,9 +1357,8 @@ function handleSubmit(e) {
   document.getElementById('form-status').textContent = lang === 'en' ? 'opening your mail client…' : 'otevírám váš e-mailový klient…';
 }
 
-// Init
+// ── Init ──
 setLang(localStorage.getItem('fc-lang') || 'cs');
-buildGallery();
 </script>
 </body>
 </html>
