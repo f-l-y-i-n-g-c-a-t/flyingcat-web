@@ -30,7 +30,7 @@
 
   --pad-x: 40px;
   --pad-x-mob: 20px;
-  --nav-h: 88px;
+  --nav-h: 140px;
   --section-pad-y: 88px;     /* väčší spacing medzi sekciami */
 }
 
@@ -104,7 +104,7 @@ body {
 ═══════════════════════════════════════ */
 .dot-divider {
   width: 100%;
-  height: 56px;
+  height: 96px;
   background: var(--paper);
   position: relative;
   overflow: hidden;
@@ -137,7 +137,7 @@ body {
   gap: 24px;
 }
 
-.nav-logo { height: 60px; display: block; flex-shrink: 0; }
+.nav-logo { height: 120px; display: block; flex-shrink: 0; }
 .nav-logo img { height: 100%; width: auto; display: block; }
 
 .nav-links {
@@ -279,15 +279,72 @@ body {
 .hero-content a,
 .hero-content button { pointer-events: auto; }
 
-/* text odíde doľava pri spustení prohliadky */
+/* text "zatahne sa" doľava pri spustení prohliadky */
 .hero-content {
-  transition: opacity 0.55s cubic-bezier(0.16,1,0.3,1),
-              transform 0.55s cubic-bezier(0.16,1,0.3,1);
-  will-change: opacity, transform;
+  transition: opacity 0.7s cubic-bezier(0.6,0,0.3,1),
+              transform 0.85s cubic-bezier(0.6,0,0.3,1),
+              filter   0.7s cubic-bezier(0.6,0,0.3,1);
+  transform-origin: 0% 50%;
+  will-change: opacity, transform, filter;
 }
-.hero-content.away { opacity: 0; transform: translateX(-52px); }
+.hero-content.away {
+  opacity: 0;
+  transform: translateX(-120px) scale(0.86);
+  filter: blur(3px);
+}
 .hero-content.away a,
 .hero-content.away button { pointer-events: none; }
+
+/* ─── TOUR STAGE — prohlídka beží priamo v #home, namiesto modalu ─── */
+.tour-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  background: var(--paper);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.55s cubic-bezier(0.16,1,0.3,1),
+              visibility 0.55s linear;
+  display: flex;
+  flex-direction: column;
+}
+.tour-stage.open { opacity: 1; visibility: visible; pointer-events: auto; }
+.tour-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--light);
+  background: var(--paper);
+  flex-shrink: 0;
+  gap: 12px;
+}
+.tour-title {
+  font-size: 11px; letter-spacing: 0.28em; text-transform: lowercase;
+  color: var(--mid); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.tour-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.tour-btn {
+  background: transparent; border: 1px solid var(--light); color: var(--ink);
+  padding: 8px 14px; font-family: var(--mono);
+  font-size: 10px; letter-spacing: 0.22em; text-transform: lowercase;
+  cursor: pointer; transition: border-color 0.15s, color 0.15s;
+}
+.tour-btn:hover { border-color: var(--ink); }
+.tour-btn.close {
+  width: 38px; height: 38px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 14px; letter-spacing: 0;
+}
+.tour-iframe-wrap { flex: 1; position: relative; background: var(--ink); min-height: 0; }
+.tour-iframe-wrap iframe {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  border: 0; display: block;
+}
+@media (max-width: 600px) {
+  .tour-bar { padding: 10px 14px; }
+  .tour-btn { padding: 6px 10px; font-size: 9px; }
+  .tour-btn.close { width: 34px; height: 34px; }
+}
 
 /* Hero H1 — DRAMATICKY VÄČŠÍ */
 .hero-h1 {
@@ -623,7 +680,7 @@ footer {
   max-width: var(--max-w);
   margin: 0 auto;
 }
-.footer-logo { height: 46px; display: block; }
+.footer-logo { height: 92px; display: block; }
 .footer-logo img { height: 100%; width: auto; display: block; }
 .footer-info { display: flex; flex-direction: column; gap: 4px; align-items: center; text-align: center; }
 .footer-url { font-size: 12px; letter-spacing: 0.05em; color: var(--ink); }
@@ -652,7 +709,7 @@ footer {
 @media (max-width: 600px) {
   :root { --section-pad-y: 56px; --pad-x: 20px; }
   .nav { padding: 0 var(--pad-x-mob); }
-  .nav-logo { height: 46px; }
+  .nav-logo { height: 80px; }
   .gallery-grid { grid-template-columns: 1fr; }
   .gallery-header { flex-direction: column; align-items: flex-start; gap: 8px; }
   .form-row { grid-template-columns: 1fr; }
@@ -662,7 +719,7 @@ footer {
   .channel-label { min-width: 0; }
 
   /* divider menší na mobile */
-  .dot-divider { height: 44px; }
+  .dot-divider { height: 76px; }
 }
 
 </style>
@@ -730,6 +787,17 @@ footer {
   <div id="dothint" aria-hidden="true">
     <span data-cs>dotkni se a táhni</span><span data-en>touch and drag</span>
   </div>
+  <!-- ═══ TOUR STAGE — prohlídka beží priamo v dotfielde ═══ -->
+  <div class="tour-stage" id="tour-stage" aria-hidden="true">
+    <div class="tour-bar">
+      <div class="tour-title" id="tour-title">—</div>
+      <div class="tour-actions">
+        <button class="tour-btn" id="tour-fs" type="button"><span data-cs>celá obrazovka</span><span data-en>fullscreen</span></button>
+        <button class="tour-btn close" id="tour-close" type="button" aria-label="zavřít prohlídku">✕</button>
+      </div>
+    </div>
+    <div class="tour-iframe-wrap" id="tour-iframe-wrap"></div>
+  </div>
 </section>
 
 <!-- ═══ DIVIDER 1 ═══ -->
@@ -750,19 +818,6 @@ footer {
     <div class="gallery-grid" id="gallery-grid"></div>
   </div>
 </section>
-
-<div class="modal-overlay" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-  <div class="modal-box">
-    <div class="modal-bar">
-      <div class="modal-title" id="modal-title">—</div>
-      <div class="modal-actions">
-        <button class="modal-btn" onclick="openFullscreen()"><span data-cs>celá obrazovka</span><span data-en>fullscreen</span></button>
-        <button class="modal-btn close" onclick="closeModal()">✕</button>
-      </div>
-    </div>
-    <div class="modal-iframe-wrap" id="modal-iframe-wrap"></div>
-  </div>
-</div>
 
 <!-- ═══ DIVIDER 2 ═══ -->
 <div class="dot-divider" aria-hidden="true" data-divider>
@@ -1049,7 +1104,7 @@ const INTRO_DUR_MS = 5000;   // dĺžka intro animácie (laditeľné)
 // DOT FIELD ENGINE  — hero (interactive + intro) aj dividery (len interactive)
 //   perf: rAF beží len keď je pole viditeľné a niečo sa deje
 // ════════════════════════════════════════════════════════════
-function makeDotField({ container, canvas, enableIntro }) {
+function makeDotField({ container, canvas, enableIntro, singleRow }) {
   const ctx = canvas.getContext('2d');
   let dots = [], W = 0, H = 0, dpr = 1;
   let cfg = dotConfigForViewport();
@@ -1069,9 +1124,9 @@ function makeDotField({ container, canvas, enableIntro }) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     const cols = Math.floor(W / cfg.spacing) + 2;
-    const rows = Math.floor(H / cfg.spacing) + 2;
+    const rows = singleRow ? 1 : Math.floor(H / cfg.spacing) + 2;
     const ox = (W - (cols - 1) * cfg.spacing) / 2;
-    const oy = (H - (rows - 1) * cfg.spacing) / 2;
+    const oy = singleRow ? H / 2 : (H - (rows - 1) * cfg.spacing) / 2;
 
     dots = [];
     for (let r2 = 0; r2 < rows; r2++) {
@@ -1220,7 +1275,7 @@ const hero = makeDotField({
   enableIntro: true
 });
 document.querySelectorAll('[data-divider]').forEach(div => {
-  makeDotField({ container: div, canvas: div.querySelector('canvas'), enableIntro: false });
+  makeDotField({ container: div, canvas: div.querySelector('canvas'), enableIntro: false, singleRow: true });
 });
 
 // ════════════════════════════════════════════════════════════
@@ -1255,19 +1310,20 @@ function buildGallery() {
 }
 
 // ════════════════════════════════════════════════════════════
-// LAUNCH SEKVENCIA
-//   klik na prohliadku → scroll hore → text doľava → klid →
-//   náhodná animácia → spustí sa prohliadka (iframe sa načítava už počas animácie)
+// LAUNCH SEKVENCIA  (in-place v #home, žiadny modal)
+//   klik na prohliadku → scroll hore → text zatahne sa doľava →
+//   klid v rastri → náhodná animácia → prohliadka sa zobrazí PRIAMO V DOTFIELDE
 // ════════════════════════════════════════════════════════════
-const INTRO_HOLD_MS = 2600;   // klid v rastri pred animáciou (laditeľné, ~"po troch sekundách")
+const INTRO_HOLD_MS = 2600;
 let currentUrl = '';
 let launchTimer = null;
 
 function prepareTour(url, name) {
   currentUrl = url;
-  document.getElementById('modal-title').textContent = name;
-  // iframe sa vloží hneď a začne načítavať (modal je skrytý cez visibility) → animácia kryje load
-  document.getElementById('modal-iframe-wrap').innerHTML =
+  document.getElementById('tour-title').textContent = name;
+  // iframe sa vloží hneď a začne načítavať (tour-stage je skrytý cez visibility)
+  // → animácia kryje load 2.5 GB scény
+  document.getElementById('tour-iframe-wrap').innerHTML =
     `<iframe src="${url}" title="${name}" allowfullscreen loading="eager"></iframe>`;
 }
 
@@ -1280,34 +1336,38 @@ function launchTour(url, name) {
   const pick = INTRO_ANIMS[Math.floor(Math.random() * INTRO_ANIMS.length)];
   clearTimeout(launchTimer);
   launchTimer = setTimeout(() => hero.playIntro(pick, revealTour), INTRO_HOLD_MS);
-  // zamkni scroll až keď doscrolluje hore (nech smooth scroll dobehne)
-  setTimeout(() => {
-    if (document.getElementById('home').classList.contains('launching')) document.body.style.overflow = 'hidden';
-  }, 650);
 }
 
 function revealTour() {
-  document.getElementById('modal').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  document.getElementById('tour-stage').classList.add('open');
+  document.getElementById('tour-stage').setAttribute('aria-hidden', 'false');
 }
 
-function closeModal() {
+function closeTour() {
   clearTimeout(launchTimer);
-  document.getElementById('modal').classList.remove('open');
-  document.getElementById('modal-iframe-wrap').innerHTML = '';
-  document.body.style.overflow = '';
-  document.getElementById('home').classList.remove('launching');
-  document.querySelector('.hero-content').classList.remove('away');
-  hero.reset();
+  const stage = document.getElementById('tour-stage');
+  stage.classList.remove('open');
+  stage.setAttribute('aria-hidden', 'true');
+  // počkaj kým doblikne, potom uprac iframe a vráť hero
+  setTimeout(() => {
+    document.getElementById('tour-iframe-wrap').innerHTML = '';
+    document.getElementById('home').classList.remove('launching');
+    document.querySelector('.hero-content').classList.remove('away');
+    hero.reset();
+  }, 560);
 }
 
-function openFullscreen() {
-  const iframe = document.querySelector('#modal-iframe-wrap iframe');
+function openTourFullscreen() {
+  const iframe = document.querySelector('#tour-iframe-wrap iframe');
   if (iframe && iframe.requestFullscreen) iframe.requestFullscreen();
   else if (currentUrl) window.open(currentUrl, '_blank');
 }
-document.getElementById('modal').addEventListener('click', function (e) { if (e.target === this) closeModal(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+document.getElementById('tour-close').addEventListener('click', closeTour);
+document.getElementById('tour-fs').addEventListener('click', openTourFullscreen);
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.getElementById('tour-stage').classList.contains('open')) closeTour();
+});
 
 // ── Language ──
 function setLang(lang) {
