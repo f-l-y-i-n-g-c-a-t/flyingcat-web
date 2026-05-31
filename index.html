@@ -1149,7 +1149,14 @@ function makeDotField({ container, canvas, enableIntro, singleRow }) {
   container.addEventListener('mouseleave', () => { ptr.x = -9999; ptr.y = -9999; });
   const tOpts = { passive: true };
   container.addEventListener('touchstart', e => { if (mode === 'interactive') { const t = e.touches[0]; setPtr(t.clientX, t.clientY, true); } }, tOpts);
-  container.addEventListener('touchmove',  e => { if (mode === 'interactive') { const t = e.touches[0]; setPtr(t.clientX, t.clientY, true); } }, tOpts);
+  container.addEventListener('touchmove', e => {
+   if (mode === 'interactive') {
+    const t = e.touches[0];
+    const r = container.getBoundingClientRect();
+    if (t.clientY < r.bottom - 150) e.preventDefault();
+    setPtr(t.clientX, t.clientY, true);
+   }
+   }, { passive: false });
   container.addEventListener('touchend', () => { ptr.active = false; ptr.x = -9999; ptr.y = -9999; });
 
   function lerp(a, b, t) { return a + (b - a) * t; }
