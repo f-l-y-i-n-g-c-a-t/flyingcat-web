@@ -1413,7 +1413,7 @@ const navObserver = new IntersectionObserver(entries => {
       });
     }
   });
-}, { threshold: 0.1, rootMargin: `-${navH}px 0px 0px 0px` });
+}, { threshold: 0.05, rootMargin: `-${navH}px 0px 0px 0px` });
 sections.forEach(id => { const el = document.getElementById(id); if (el) navObserver.observe(el); });
 
 // ── Contact form ──
