@@ -1153,7 +1153,7 @@ function makeDotField({ container, canvas, enableIntro, singleRow }) {
    if (mode === 'interactive') {
     const t = e.touches[0];
     const r = container.getBoundingClientRect();
-    if (t.clientY < r.bottom - 200) e.preventDefault();
+    if (t.clientY < r.bottom - 300) e.preventDefault();
     setPtr(t.clientX, t.clientY, true);
    }
    }, { passive: false });
