@@ -720,6 +720,9 @@ footer {
   user-select: none;
   -webkit-touch-callout: none;
 }
+.section-label.active { background: var(--red); color: var(--paper); padding: 2px 6px; }
+.section-label.active .num { color: var(--paper); }
+.nav-drawer a.active { color: var(--paper); background: var(--red); }
    
 </style>
 </head>
@@ -1408,7 +1411,15 @@ document.querySelectorAll('.nav-links a').forEach(a => {
     scrollLockTimer = setTimeout(() => { scrollLock = false; }, 1000);
   });
 });
-
+document.querySelectorAll('.nav-drawer a').forEach(a => {
+  a.addEventListener('click', () => {
+    document.querySelectorAll('.nav-links a, .nav-drawer a').forEach(x => x.classList.remove('active'));
+    const href = a.getAttribute('href');
+    document.querySelectorAll('.nav-links a, .nav-drawer a').forEach(x => {
+      if (x.getAttribute('href') === href) x.classList.add('active');
+    });
+  });
+});
 let scrollLock = false;
 let scrollLockTimer;
 
@@ -1425,6 +1436,10 @@ function updateActiveNav() {
   });
   document.querySelectorAll('.nav-links a').forEach(a => {
     a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+  });
+   document.querySelectorAll('.section-label').forEach(label => {
+    const section = label.closest('section[id]');
+    label.classList.toggle('active', section && section.id === current);
   });
 }
 
