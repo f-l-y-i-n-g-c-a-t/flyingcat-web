@@ -815,7 +815,7 @@ footer {
   <div class="gallery-inner">
     <div class="gallery-header">
       <div>
-        <div class="section-label"><span class="num">01</span>&nbsp;&nbsp;<span data-cs>prohlídky</span><span data-en>gallery</span></div>
+        <div class="section-label"><span data-cs>prohlídky</span><span data-en>gallery</span></div>
         <h2 class="section-title" id="gallery-heading"><span data-cs>naše prohlídky</span><span data-en>our recent work</span></h2>
       </div>
       <div class="gallery-count" id="gallery-count"></div>
@@ -833,7 +833,7 @@ footer {
 <section id="process" aria-labelledby="process-heading">
   <div class="process-inner">
     <div class="process-header">
-      <div class="section-label"><span class="num">02</span>&nbsp;&nbsp;<span data-cs>proces</span><span data-en>process</span></div>
+      <div class="section-label"><span data-cs>proces</span><span data-en>process</span></div>
       <h2 class="section-title" id="process-heading"><span data-cs>jak vznikne vaše prohlídka</span><span data-en>how your tour is made</span></h2>
     </div>
     <div class="process-grid">
@@ -868,7 +868,7 @@ footer {
 <section id="about" aria-labelledby="about-heading">
   <div class="about-inner">
     <div>
-      <div class="section-label" style="margin-bottom:24px;"><span class="num">03</span>&nbsp;&nbsp;<span data-cs>o nás</span><span data-en>about</span></div>
+      <div class="section-label" style="margin-bottom:24px;"><span data-cs>o nás</span><span data-en>about</span></div>
       <div class="stats">
         <div class="stat"><div class="stat-num">2025</div><div class="stat-label"><span data-cs>založeno</span><span data-en>founded</span></div></div>
         <div class="stat"><div class="stat-num">5–10<span class="stat-unit"> dní</span></div><div class="stat-label"><span data-cs>dodací doba</span><span data-en>delivery time</span></div></div>
@@ -900,7 +900,7 @@ footer {
 <section id="usecases" aria-labelledby="uc-heading">
   <div class="uc-inner">
     <div class="uc-header">
-      <div class="section-label"><span class="num">04</span>&nbsp;&nbsp;<span data-cs>využití</span><span data-en>use cases</span></div>
+      <div class="section-label"><span data-cs>využití</span><span data-en>use cases</span></div>
       <h2 class="section-title" id="uc-heading"><span data-cs>pro koho prohlídky děláme</span><span data-en>who we work with</span></h2>
     </div>
     <div class="uc-grid">
@@ -923,7 +923,7 @@ footer {
 <section id="contact" aria-labelledby="contact-heading">
   <div class="contact-inner">
     <div class="contact-intro">
-      <div class="section-label"><span class="num">05</span>&nbsp;&nbsp;<span data-cs>kontakt</span><span data-en>contact</span></div>
+      <div class="section-label"><span data-cs>kontakt</span><span data-en>contact</span></div>
       <h2 class="section-title" id="contact-heading"><span data-cs>poptat prohlídku</span><span data-en>request a tour</span></h2>
       <p class="body-text" style="margin-top:14px;"><span data-cs>napište nám pár vět o prostoru a my se ozveme s návrhem a cenou. obvykle odpovídáme do 24 hodin.</span><span data-en>tell us about your space and we'll come back with a proposal and quote. usually within 24 hours.</span></p>
       <div class="contact-channels">
@@ -1401,21 +1401,25 @@ function toggleMenu() {
 }
 function closeMenu() {
   document.getElementById('hamburger').classList.remove('open');
-  setTimeout(() => { document.getElementById('nav-drawer').classList.remove('open'); }, 400);
+  document.getElementById('nav-drawer').classList.remove('open');
 }
 
 // ── Active nav on scroll (rootMargin odvodený z --nav-h) ──
 document.querySelectorAll('.nav-links a').forEach(a => {
   a.addEventListener('click', () => {
     document.querySelectorAll('.nav-links a').forEach(x => x.classList.remove('active'));
-    a.classList.add('active');
+    a.classList.add('active');const targetId = a.getAttribute('href').replace('#', '');
+    document.querySelectorAll('.section-label').forEach(label => {
+      const section = label.closest('section[id]');
+      label.classList.toggle('active', section && section.id === targetId);
+    });
     scrollLock = true;
     clearTimeout(scrollLockTimer);
     scrollLockTimer = setTimeout(() => { scrollLock = false; }, 2000);
   });
 });
 document.querySelectorAll('.nav-drawer a').forEach(a => {
-  a.addEventListener('click', () => {
+  a.addEventListener('touchstart', () => {
     a.classList.add('active');
     setTimeout(() => { a.classList.remove('active'); }, 300);
   });
