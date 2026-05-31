@@ -1412,18 +1412,23 @@ let scrollLockTimer;
 
 const navH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) || 88;
 const sections = ['home', 'gallery', 'process', 'about', 'usecases', 'contact'];
-const navObserver = new IntersectionObserver(entries => {
-  if (scrollLock) return;
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      document.querySelectorAll('.nav-links a').forEach(a => {
-        a.classList.toggle('active', a.getAttribute('href') === '#' + entry.target.id);
-      });
-    }
-  });
-}, { threshold: [0, 0.1, 0.5], rootMargin: `-${navH}px 0px -40% 0px` });
-sections.forEach(id => { const el = document.getElementById(id); if (el) navObserver.observe(el); });
 
+function updateActiveNav() {
+  if (scrollLock) return;
+  const scrollY = window.scrollY + navH + 10;
+  let current = sections[0];
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.offsetTop <= scrollY) current = id;
+  });
+  document.querySelectorAll('.nav-links a').forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+  });
+}
+
+window.addEventListener('scroll', updateActiveNav, { passive: true });
+updateActiveNav();
+   
 // ── Contact form ──
 function handleSubmit(e) {
   e.preventDefault();
