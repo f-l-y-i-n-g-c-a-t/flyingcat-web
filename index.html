@@ -1401,7 +1401,7 @@ function toggleMenu() {
 }
 function closeMenu() {
   document.getElementById('hamburger').classList.remove('open');
-  document.getElementById('nav-drawer').classList.remove('open');
+  setTimeout(() => { document.getElementById('nav-drawer').classList.remove('open'); }, 400);
 }
 
 // ── Active nav on scroll (rootMargin odvodený z --nav-h) ──
@@ -1411,7 +1411,7 @@ document.querySelectorAll('.nav-links a').forEach(a => {
     a.classList.add('active');
     scrollLock = true;
     clearTimeout(scrollLockTimer);
-    scrollLockTimer = setTimeout(() => { scrollLock = false; }, 1000);
+    scrollLockTimer = setTimeout(() => { scrollLock = false; }, 2000);
   });
 });
 document.querySelectorAll('.nav-drawer a').forEach(a => {
