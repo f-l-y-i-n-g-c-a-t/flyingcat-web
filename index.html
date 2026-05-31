@@ -658,6 +658,8 @@ body {
 .form-submit:hover { background: var(--red); border-color: var(--red); color: var(--paper); }
 .form-note { font-size: 10px; letter-spacing: 0.06em; color: var(--mid); margin-top: 4px; }
 
+   <div style="height: 50vh;"></div>
+
 /* ═══════════════════════════════════════
    FOOTER
 ═══════════════════════════════════════ */
@@ -1415,7 +1417,7 @@ const sections = ['home', 'gallery', 'process', 'about', 'usecases', 'contact'];
 
 function updateActiveNav() {
   if (scrollLock) return;
-  const scrollY = window.scrollY + navH + 10;
+  const scrollY = window.scrollY + window.innerHeight / 2;
   let current = sections[0];
   sections.forEach(id => {
     const el = document.getElementById(id);
