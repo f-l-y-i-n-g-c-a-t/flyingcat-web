@@ -1148,8 +1148,8 @@ function makeDotField({ container, canvas, enableIntro, singleRow }) {
   window.addEventListener('mouseup', () => { ptr.active = false; });
   container.addEventListener('mouseleave', () => { ptr.x = -9999; ptr.y = -9999; });
   const tOpts = { passive: true };
-  container.addEventListener('touchstart', e => { if (mode === 'interactive') { const t = e.touches[0]; const r = container.getBoundingClientRect(); if (t.clientY > r.bottom - 150) return; setPtr(t.clientX, t.clientY, true); } }, tOpts);
-  container.addEventListener('touchmove',  e => { if (mode === 'interactive') { const t = e.touches[0]; const r = container.getBoundingClientRect(); if (t.clientY > r.bottom - 150) return; setPtr(t.clientX, t.clientY, true); } }, tOpts);
+  container.addEventListener('touchstart', e => { if (mode === 'interactive') { const t = e.touches[0]; const r = container.getBoundingClientRect(); if (t.clientY > r.bottom - 150) { ptr.active = false; return; } setPtr(t.clientX, t.clientY, true); } }, tOpts);
+  container.addEventListener('touchmove',  e => { if (mode === 'interactive') { const t = e.touches[0]; const r = container.getBoundingClientRect(); if (t.clientY > r.bottom - 150) { return; } setPtr(t.clientX, t.clientY, true); e.preventDefault(); } }, { passive: false });
   container.addEventListener('touchend', () => { ptr.active = false; ptr.x = -9999; ptr.y = -9999; });
 
   function lerp(a, b, t) { return a + (b - a) * t; }
