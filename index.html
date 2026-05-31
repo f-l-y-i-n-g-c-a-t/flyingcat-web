@@ -1397,6 +1397,12 @@ function closeMenu() {
 }
 
 // ── Active nav on scroll (rootMargin odvodený z --nav-h) ──
+document.querySelectorAll('.nav-links a').forEach(a => {
+  a.addEventListener('click', () => {
+    document.querySelectorAll('.nav-links a').forEach(x => x.classList.remove('active'));
+    a.classList.add('active');
+  });
+});
 const navH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) || 88;
 const sections = ['home', 'gallery', 'process', 'about', 'usecases', 'contact'];
 const navObserver = new IntersectionObserver(entries => {
