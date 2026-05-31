@@ -1401,11 +1401,19 @@ document.querySelectorAll('.nav-links a').forEach(a => {
   a.addEventListener('click', () => {
     document.querySelectorAll('.nav-links a').forEach(x => x.classList.remove('active'));
     a.classList.add('active');
+    scrollLock = true;
+    clearTimeout(scrollLockTimer);
+    scrollLockTimer = setTimeout(() => { scrollLock = false; }, 1000);
   });
 });
+
+let scrollLock = false;
+let scrollLockTimer;
+
 const navH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) || 88;
 const sections = ['home', 'gallery', 'process', 'about', 'usecases', 'contact'];
 const navObserver = new IntersectionObserver(entries => {
+  if (scrollLock) return;
   entries.forEach(entry => {
     if (entry.isIntersecting) {
       document.querySelectorAll('.nav-links a').forEach(a => {
@@ -1413,7 +1421,7 @@ const navObserver = new IntersectionObserver(entries => {
       });
     }
   });
-}, { threshold: 0.05, rootMargin: `-${navH}px 0px 0px 0px` });
+}, { threshold: 0.1, rootMargin: `-${navH}px 0px 0px 0px` });
 sections.forEach(id => { const el = document.getElementById(id); if (el) navObserver.observe(el); });
 
 // ── Contact form ──
