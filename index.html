@@ -51,14 +51,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Reduced motion fallback  */
-@media (prefers-reduced-motion: reduce) {
-  .hero-loader .d,
-  .dot-divider span {
-    animation: none !important;
-  }
-}
-
 /* ── PRIMITIVES ── */
 .section {
   padding: var(--section-pad-y) var(--pad-x);
@@ -78,7 +70,6 @@ body {
   align-items: center;
   gap: 10px;
 }
-.section-label .num { color: var(--red); }
 
 .section-title {
   font-size: 28px;                /* zväčšené pre kontrast */
@@ -176,22 +167,6 @@ body {
 }
 .lang-btn.active { background: var(--ink); color: var(--paper); }
 
-.nav-cta {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.24em;
-  text-transform: lowercase;
-  background: transparent;
-  border: none;
-  color: var(--ink);
-  padding: 6px 12px;             /* väčší touch target */
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-  white-space: nowrap;
-  min-height: 38px;
-}
-.nav-cta:hover { background: var(--red); border-color: var(--red); color: var(--paper); }
-
 .hamburger {
   display: none;
   flex-direction: column;
@@ -229,7 +204,6 @@ body {
   padding: 14px 0;                /* väčší touch target */
   border-bottom: 1px solid var(--light);
 }
-.nav-drawer-bottom { display: flex; gap: 10px; padding-top: 8px; }
 
 /* ═══════════════════════════════════════
    HERO — interaktívne dot pole ako pozadie
@@ -478,55 +452,6 @@ color: var(--paper);
 .g-info { font-size: 10px; letter-spacing: 0.06em; color: var(--mid); }
 
 /* ═══════════════════════════════════════
-   TOUR MODAL
-═══════════════════════════════════════ */
-.modal-overlay {
-  display: flex; position: fixed; inset: 0;
-  background: rgba(10,10,10,0.88);
-  z-index: 500;
-  align-items: center; justify-content: center;
-  padding: 24px;
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition: opacity 0.45s ease, visibility 0.45s ease;
-}
-.modal-overlay.open { opacity: 1; visibility: visible; pointer-events: auto; }
-.modal-box {
-  background: var(--cloud);
-  border: 1px solid var(--light);
-  width: 100%; max-width: 1080px;
-  display: flex; flex-direction: column;
-  max-height: 90vh;
-}
-.modal-bar {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 11px 14px;
-  border-bottom: 1px solid var(--light);
-  flex-shrink: 0;
-}
-.modal-title { font-size: 11px; letter-spacing: 0.1em; color: var(--ink); }
-.modal-actions { display: flex; gap: 8px; }
-.modal-btn {
-  font-family: var(--mono);
-  font-size: 9px;
-  letter-spacing: 0.24em;
-  text-transform: lowercase;
-  background: transparent;
-  border: 1px solid var(--light);
-  color: var(--mid);
-  padding: 8px 14px;
-  cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
-  min-height: 34px;
-}
-.modal-btn:hover { border-color: var(--ink); color: var(--ink); }
-.modal-btn.close { border-color: var(--ink); color: var(--ink); }
-.modal-btn.close:hover { background: var(--red); border-color: var(--red); color: var(--paper); }
-.modal-iframe-wrap { flex: 1; position: relative; min-height: 400px; }
-.modal-iframe-wrap iframe { width: 100%; height: 100%; border: none; display: block; position: absolute; inset: 0; }
-
-/* ═══════════════════════════════════════
    PROCESS
 ═══════════════════════════════════════ */
 #process {
@@ -690,7 +615,6 @@ footer {
 @media (max-width: 900px) {
   :root { --section-pad-y: 64px; --pad-x: 24px; }
   .nav-links { display: none; }
-  .nav-cta   { display: none; }
   .hamburger { display: flex; }
 
   .gallery-grid { grid-template-columns: repeat(2, 1fr); }
@@ -709,8 +633,6 @@ footer {
   .gallery-grid { grid-template-columns: 1fr; }
   .gallery-header { flex-direction: column; align-items: flex-start; gap: 8px; }
   .form-row { grid-template-columns: 1fr; }
-  .modal-overlay { padding: 12px; }
-  .modal-box { max-height: 95vh; }
   .channel { flex-direction: column; gap: 4px; }
   .channel-label { min-width: 0; }
 
@@ -725,7 +647,6 @@ footer {
 }
 .section-label.active { color: var(--paper); display: inline-flex; }
 .section-label.active span:not(.num) { background: var(--red); padding: 2px 6px; }
-.section-label.active .num { color: var(--red); }
 .nav-drawer a.active { color: var(--paper); background: var(--red); }
 
    
@@ -1100,7 +1021,7 @@ const INTRO_DUR_MS = 5000;   // dĺžka intro animácie (laditeľné)
 // DOT FIELD ENGINE  — hero (interactive + intro) aj dividery (len interactive)
 //   perf: rAF beží len keď je pole viditeľné a niečo sa deje
 // ════════════════════════════════════════════════════════════
-function makeDotField({ container, canvas, enableIntro, singleRow }) {
+function makeDotField({ container, canvas, singleRow }) {
   const ctx = canvas.getContext('2d');
   let dots = [], W = 0, H = 0, dpr = 1;
   let cfg = dotConfigForViewport();
@@ -1270,11 +1191,10 @@ container.addEventListener('touchmove', e => {
 // ── inštancie ──
 const hero = makeDotField({
   container: document.getElementById('home'),
-  canvas:    document.getElementById('dotcanvas'),
-  enableIntro: true
+  canvas:    document.getElementById('dotcanvas')
 });
 document.querySelectorAll('[data-divider]').forEach(div => {
-  makeDotField({ container: div, canvas: div.querySelector('canvas'), enableIntro: false, singleRow: true });
+  makeDotField({ container: div, canvas: div.querySelector('canvas'), singleRow: true });
 });
 
 // ════════════════════════════════════════════════════════════
@@ -1373,11 +1293,9 @@ function setLang(lang) {
   document.body.classList.remove('lang-cs', 'lang-en');
   document.body.classList.add(lang === 'en' ? 'lang-en' : 'lang-cs');
   document.documentElement.lang = lang;
-  ['', '-m'].forEach(s => {
-    document.getElementById('btn-cs' + s)?.classList.toggle('active', lang === 'cs');
-    document.getElementById('btn-en' + s)?.classList.toggle('active', lang === 'en');
-  });
-  localStorage.setItem('fc-lang', lang);
+  document.getElementById('btn-cs').classList.toggle('active', lang === 'cs');
+  document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+  try { localStorage.setItem('fc-lang', lang); } catch (e) {}
   buildGallery();
 }
 
@@ -1391,7 +1309,7 @@ function closeMenu() {
   document.getElementById('nav-drawer').classList.remove('open');
 }
 
-// ── Active nav on scroll (rootMargin odvodený z --nav-h) ──
+// ── Active nav on scroll ──
 document.querySelectorAll('.nav-links a').forEach(a => {
   a.addEventListener('click', () => {
     document.querySelectorAll('.nav-links a').forEach(x => x.classList.remove('active'));
@@ -1414,7 +1332,6 @@ document.querySelectorAll('.nav-drawer a').forEach(a => {
 let scrollLock = false;
 let scrollLockTimer;
 
-const navH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) || 88;
 const sections = ['home', 'gallery', 'process', 'about', 'usecases', 'contact'];
 
 function updateActiveNav() {
@@ -1449,7 +1366,9 @@ function handleSubmit(e) {
 }
 
 // ── Init ──
-setLang(localStorage.getItem('fc-lang') || 'cs');
+let savedLang = 'cs';
+try { savedLang = localStorage.getItem('fc-lang') || 'cs'; } catch (e) {}
+setLang(savedLang);
 </script>
 </body>
 </html>
