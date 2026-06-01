@@ -1119,10 +1119,11 @@ function makeDotField({ container, canvas, enableIntro, singleRow }) {
     canvas.width = W * dpr; canvas.height = H * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    const cols = Math.floor(W / cfg.spacing) + 2;
-    const rows = singleRow ? 1 : Math.floor(H / cfg.spacing) + 2;
-    const ox = (W - (cols - 1) * cfg.spacing) / 2;
-    const oy = singleRow ? H / 2 : (H - (rows - 1) * cfg.spacing) / 2;
+  const pad = 10;
+    const cols = Math.floor((W - pad * 2) / cfg.spacing) + 1;
+    const rows = singleRow ? 1 : Math.floor((H - pad * 2) / cfg.spacing) + 1;
+    const ox = pad + ((W - pad * 2) - (cols - 1) * cfg.spacing) / 2;
+    const oy = singleRow ? H / 2 : pad + ((H - pad * 2) - (rows - 1) * cfg.spacing) / 2;
 
     dots = [];
     for (let r2 = 0; r2 < rows; r2++) {
@@ -1147,14 +1148,9 @@ function makeDotField({ container, canvas, enableIntro, singleRow }) {
   container.addEventListener('mouseleave', () => { ptr.x = -9999; ptr.y = -9999; });
   const tOpts = { passive: true };
   container.addEventListener('touchstart', e => { if (mode === 'interactive') { const t = e.touches[0]; setPtr(t.clientX, t.clientY, true); } }, tOpts);
-  container.addEventListener('touchmove', e => {
-   if (mode === 'interactive') {
-    const t = e.touches[0];
-    const r = container.getBoundingClientRect();
-    if (t.clientY < r.bottom - 300) e.preventDefault();
-    setPtr(t.clientX, t.clientY, true);
-   }
-   }, { passive: false });
+container.addEventListener('touchmove', e => {
+   if (mode === 'interactive') { const t = e.touches[0]; setPtr(t.clientX, t.clientY, true); }
+   }, tOpts);
   container.addEventListener('touchend', () => { ptr.active = false; ptr.x = -9999; ptr.y = -9999; });
 
   function lerp(a, b, t) { return a + (b - a) * t; }
