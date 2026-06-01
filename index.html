@@ -136,7 +136,7 @@ body {
   gap: 24px;
 }
 
-.nav-logo { height: 80px; display: block; flex-shrink: 0; }
+.nav-logo { height: 70px; display: block; flex-shrink: 0; }
 .nav-logo img { height: 100%; width: auto; display: block; }
 
 .nav-links {
@@ -705,7 +705,7 @@ footer {
 @media (max-width: 600px) {
   :root { --section-pad-y: 56px; --pad-x: 20px; --nav-h: 80px; }
   .nav { padding: 0 var(--pad-x-mob); }
-  .nav-logo { height: 40px; }
+  .nav-logo { height: 40px; margin-left: 4px; }
   .gallery-grid { grid-template-columns: 1fr; }
   .gallery-header { flex-direction: column; align-items: flex-start; gap: 8px; }
   .form-row { grid-template-columns: 1fr; }
@@ -800,11 +800,6 @@ footer {
     <div class="tour-iframe-wrap" id="tour-iframe-wrap"></div>
   </div>
 </section>
-
-<!-- ═══ DIVIDER 1 ═══ -->
-<div class="dot-divider" aria-hidden="true" data-divider>
-  <canvas></canvas>
-</div>
 
 <!-- ═══ GALLERY ═══ -->
 <section id="gallery" aria-labelledby="gallery-heading">
