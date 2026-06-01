@@ -138,13 +138,13 @@ body {
 
 .nav-logo { height: 70px; display: block; flex-shrink: 0; }
 .nav-logo img { height: 100%; width: auto; display: block; }
-
 .nav-links {
   display: flex;
   gap: 28px;
   list-style: none;
-  flex: 1;
-  justify-content: center;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
 .nav-links a {
   font-size: 11px;
