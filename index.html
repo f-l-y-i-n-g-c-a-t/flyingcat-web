@@ -1,3 +1,409 @@
+
+f l y i n g c a t
+/
+Claude finished the response
+nacti si kontext a prjektu a hlavne z chatov co zacinaji WEB a jdeme dal upravovat web, posilam ti html
+
+Jun 1
+
+Ověřil kontext projektu a připravil se na úpravy webu
+Ověřil kontext projektu a připravil se na úpravy webu
+Mám kontext ze všech sesí (Web I–IV). Poslední stav z Web IV:
+
+Tour stage přesunutý přímo do #home (místo standalone modalu)
+Nav na mobilu zmenšená (72px, logo 50px), border-bottom odstraněn
+Tři standalone animace hotové (závěsy, pád, koule) — čekají na výběr a integraci
+Známé issues z Web III auditu (touch-action, reduced-motion, divider drift, max-width kontejner) — některé fixnuté ve Web IV
+Workflow je stejný: přesné řádky k nahrazení, žádný celý soubor.
+
+Pošli HTML, přečtu ho a jedeme. Co měníme?
+
+
+index.html
+html
+
+pod dofieldem je divider ty tecky jeden pruh ten jeden pod dotfieldem vyhodime
+
+Jun 1
+
+Identifikoval prvek k odstranění pod dotfieldem
+Identifikoval prvek k odstranění pod dotfieldem
+DIVIDER 1 je řádky 804–807, hned pod hero </section>. Smaž tenhle blok:
+
+Původní kód (řádky 804–807):
+
+html
+<!-- ═══ DIVIDER 1 ═══ -->
+<div class="dot-divider" aria-hidden="true" data-divider>
+  <canvas></canvas>
+</div>
+Nahraď: prázdno (smaž celý blok).
+
+Zbytek dividerů (2–6) zůstane, jen první pod dotfieldem zmizí. Číslování v komentářích je jen pro orientaci, funkčně je to jedno — JS je vybírá přes [data-divider].
+
+logo v liste nahore o 8 procent mensi
+
+Jun 1
+
+Vypočítal zmenšenie loga o osem percent
+Vypočítal zmenšenie loga o osem percent
+Dvě místa:
+
+Řádek 139 (desktop):
+
+css
+.nav-logo { height: 80px; display: block; flex-shrink: 0; }
+→
+
+css
+.nav-logo { height: 74px; display: block; flex-shrink: 0; }
+Řádek 708 (mobile):
+
+css
+.nav-logo { height: 40px; }
+→
+
+css
+.nav-logo { height: 37px; }
+(80 × 0.92 ≈ 74, 40 × 0.92 ≈ 37)
+
+na mobile ne, na mobile ho chcem posunut uplne nepatrne doprava
+
+Jun 1
+
+Analyzoval mobilný layout a posunutie loga
+Analyzoval mobilný layout a posunutie loga
+Řádek 708 — přidej k logu mírný posun:
+
+css
+.nav-logo { height: 40px; }
+→
+
+css
+.nav-logo { height: 40px; margin-left: 4px; }
+Pokud je to moc/málo, řekni a posunu na 2px nebo 6px.
+
+nazvy kapitol na horni liste na desktopu nejsou vstrede
+
+Jun 1
+
+Diagnostikoval problém centrování navigace a zvážil řešení
+Diagnostikoval problém centrování navigace a zvážil řešení
+Problém je, že logo (vlevo) a lang toggle (vpravo) mají různou šířku — flex: 1 na .nav-links centruje jen v zbylém prostoru, ne na střed celé lišty.
+
+Nejčistší fix — absolutní centrování linků:
+
+Řádek 142–148, nahraď:
+
+css
+.nav-links {
+  display: flex;
+  gap: 28px;
+  list-style: none;
+  flex: 1;
+  justify-content: center;
+}
+→
+
+css
+.nav-links {
+  display: flex;
+  gap: 28px;
+  list-style: none;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+Logo a lang toggle zůstanou na svých místech přes justify-content: space-between, linky budou přesně na středu viewportu.
+
+ted dotfield, na mobilu se jakoby "klepe" trochu a uplne dole se objevi takovy pruh polovicnich bodu  a na  desktoe potrebuje vice mista protoze na kraji ty odrazene tecky miznou jakoby se cropujou ale staci asi jen 10px
+
+Jun 1
+
+Identifikoval dva problémy: mobilní chvění a oříznuté tečky
+Identifikoval dva problémy: mobilní chvění a oříznuté tečky
+Dva problémy, dva fixy:
+
+1. Klepání na mobilu — touchmove handler (řádky 1155–1162) bojuje s touch-action: pan-y. preventDefault je zbytečný, protože pan-y už řeší scroll. Nahraď:
+
+js
+  container.addEventListener('touchmove', e => {
+   if (mode === 'interactive') {
+    const t = e.touches[0];
+    const r = container.getBoundingClientRect();
+    if (t.clientY < r.bottom - 300) e.preventDefault();
+    setPtr(t.clientX, t.clientY, true);
+   }
+   }, { passive: false });
+→
+
+js
+  container.addEventListener('touchmove', e => {
+   if (mode === 'interactive') { const t = e.touches[0]; setPtr(t.clientX, t.clientY, true); }
+   }, tOpts);
+2. Poloviční tečky dole + ořez na desktopu — grid se počítá s + 2 řádky/sloupci navíc, které přečnívají přes overflow: hidden. Přidáme 10px inset. Řádky 1127–1130, nahraď:
+
+js
+    const cols = Math.floor(W / cfg.spacing) + 2;
+    const rows = singleRow ? 1 : Math.floor(H / cfg.spacing) + 2;
+    const ox = (W - (cols - 1) * cfg.spacing) / 2;
+    const oy = singleRow ? H / 2 : (H - (rows - 1) * cfg.spacing) / 2;
+→
+
+js
+    const pad = 10;
+    const cols = Math.floor((W - pad * 2) / cfg.spacing) + 1;
+    const rows = singleRow ? 1 : Math.floor((H - pad * 2) / cfg.spacing) + 1;
+    const ox = pad + ((W - pad * 2) - (cols - 1) * cfg.spacing) / 2;
+    const oy = singleRow ? H / 2 : pad + ((H - pad * 2) - (rows - 1) * cfg.spacing) / 2;
+Grid bude mít 10px volného prostoru od každého kraje — tečky se přestanou ořezávat při interakci a dole zmizí ten proužek.
+
+prepnu te na nejlepsi model, poslu to html a udelas hloubkovou analyzu webu jako nejlepsi profesional na weby. co se tyce funkce a vyzoru nezmenis jedinou vec ale klidne muzes kod menit
+
+Jun 1
+
+Připravil se na hloubkovou analýzu kódu webu
+Připravil se na hloubkovou analýzu kódu webu
+Čekám na HTML. Až ho pošleš, přečtu celý soubor řádek po řádku a udělám hloubkový audit — struktura, performance, SEO, accessibility, kód, edge cases — bez jediné změny vzhledu nebo funkce.
+
+
+index.html
+html
+
+Jun 1
+
+The user prompt is empty, so there is no primary language established. However, based on the thinking block being in English, I'll provide a summary in English: Cataloging dead CSS selectors and orphaned markup elements
+The user prompt is empty, so there is no primary language established. However, based on the thinking block being in English, I'll provide a summary in English: Cataloging dead CSS selectors and orphaned markup elements
+Let me verify a few things before I write the audit — I want to be sure about what's actually dead vs. used.
+
+
+Architected comprehensive code audit with tiered findings and remediation strategy
+Architected comprehensive code audit with tiered findings and remediation strategy
+Mám celý soubor přečtený a ověřený (grepem, ne od oka). Tady je hloubkový audit. Rozdělil jsem ho podle toho, co je opravdová chyba, co je mrtvý kód k bezpečnému smazání (nulový dopad na vzhled i funkci), a co se dotýká vzhledu/chování — tj. počkám na tvoje OK.
+
+🔴 Skutečné chyby
+1. localStorage bez try/catch — může shodit celý web (řádky 1380, 1452) Tohle je nejnebezpečnější věc v souboru. V init na konci voláš setLang(localStorage.getItem('fc-lang') || 'cs'). V Safari v privátním režimu, v zanořeném iframe nebo při zakázaném úložišti localStorage vyhodí výjimku → celý <script> umře → nepostaví se galerie, nenastartuje dotfield, nic. Ve Web II jsi to měl obalené, tady to regreslo. Oprava nic nemění v normálním běhu, jen zabrání pádu. Toto bych fixnul jako první.
+
+2. Vložený <div> v <style> ti zabíjí ::selection (řádek 37)
+
+css
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }<div style="height: 50vh;"></div>
+Náhodně vložený <div> přímo do CSS. Kvůli tomu, jak CSS zotavuje z chyby, parser spolkne všechno až po první { — což je { od ::selection hned na dalším řádku — a celé to pravidlo zahodí jako neplatné. Důsledek: výběr textu na stránce teď nemá tvou červenou, ale výchozí modrou prohlížeče. Smazáním <div> se červený výběr obnoví (to je jediná viditelná změna).
+
+3. Povinná pole svítí červeně hned po načtení (řádek 643)
+
+css
+.field input:invalid:not(:placeholder-shown) { border-color: var(--red); }
+Tahle „svítí červeně až když uživatel pole opustí prázdné" pojistka funguje jen když mají inputy placeholder. Tvoje #f-name a #f-email žádný placeholder nemají (ověřeno — v celém souboru je 0 placeholderů). Bez něj :placeholder-shown nikdy nematchne → :not(...) je vždy true → prázdná povinná pole mají červený rámeček už při otevření stránky, před jakoukoliv interakcí. Skoro jistě nezáměr. Fix = přidat placeholder=" " na oba inputy. Mění to vzhled (červené rámečky zmizí), tak čekám na potvrzení.
+
+4. prefers-reduced-motion se reálně nedodržuje (řádky 55–60)
+
+css
+@media (prefers-reduced-motion: reduce) {
+  .hero-loader .d,
+  .dot-divider span { animation: none !important; }
+}
+Oba selektory míří na elementy, které neexistují (.hero-loader nikde není, dividery mají <canvas>, ne <span>). Takže blok nedělá nic. Skutečný pohyb — canvasový dotfield, intro „výbuch" koule, fade hero textu — běží i uživatelům, kteří si vyžádali omezený pohyb. To je accessibility díra (vestibulární/epileptická citlivost). Dodržet to znamená změnit chování pro tyhle uživatele — proto jen flag + nabídka.
+
+🟡 Mrtvý kód — bezpečné smazat (0 dopadu na vzhled i funkci)
+Vše ověřeno grepem, že se nikde nepoužívá:
+
+Celý blok TOUR MODAL CSS, řádky 480–527 (~48 řádků) — modal jsi ve Web IV nahradil tour-stage, v markupu není jediná modal-* třída. Plus mobilní zbytky řádky 712–713.
+.nav-cta CSS, řádky 179–193 + řádek 693 — žádný nav-cta element neexistuje.
+.nav-drawer-bottom, řádek 232 — v markupu není.
+.section-label .num (řádek 81) a .section-label.active .num (řádek 728) — žádný class="num" v markupu neexistuje (čísla sekcí jsou prostý text ·  01).
+navH proměnná, řádek 1417 — spočítá se a nikdy nepoužije. Komentář o „rootMargin z --nav-h" na ř. 1394 je navíc zavádějící (žádný rootMargin tu není).
+-m iterace v setLang, řádky 1376–1379 — hledá btn-cs-m/btn-en-m, které neexistují (drawer nemá přepínač jazyka). ?. to drží naživu, ale je to mrtvá smyčka.
+Parametr enableIntro — předáváš true/false, ale uvnitř makeDotField se nikdy nečte (intro řídíš zvenčí přes playIntro).
+To je dohromady ~90 řádků dolů, soubor se renderuje 1:1 stejně.
+
+🔵 Před launchem / doporučení (jen flag, nesahám)
+Druhý stray div, řádek 968 — <div style="height: 30vh;"></div> před footerem. Tenhle se na rozdíl od toho v <style> opravdu renderuje a dělá velkou (30vh) mezeru nad patičkou. Vypadá jako stejný náhodný paste. Smazat? (zmenší to mezeru nad footerem).
+Chybí Open Graph tagy — verze z Web II je měla, tahle ne. Pro studio, jehož celý pitch je „pošli čistý link", je chybějící náhledová karta při sdílení reálná ztráta. Doplnit?
+noindex, nofollow (řádek 7) — správně pro teď, jen připomínka odstranit před spuštěním.
+E-mail nekonzistence — web má matej@flyingcat.services (ř. 923, 977, 1447), ale v kontextu projektu je firemní info@flyingcat.services. Záměr, nebo sjednotit?
+Hierarchie nadpisů — máš h1 + h2, ale kroky procesu a use-cases jsou <div>, ne h3. Pro SEO/čtečky by to chtělo h3; protože styl drží třídy, vizuálně by to bylo identické. (Mění to DOM, proto flag.)
+will-change na .hero-content (ř. 281) je trvalý — drží kompozitní vrstvu pořád, ne jen během animace. Drobnost, dá se nasadit jen na čas přechodu.
+Hamburger nemá aria-expanded — drobné a11y, dalo by se přepínat ve toggleMenu.
+Jádro je jinak zdravé — dotfield engine je matematicky čistý, IntersectionObserver pauzuje mimo obraz, launch sekvence (hold → intro → reveal in-place) je dobře zřetězená, bilingvní systém sedí, touch listenery jsou passive.
+
+Jak chceš pokračovat? Můžu hned:
+
+Fixnout #1 (localStorage guard) + smazat všechen 🟡 mrtvý kód — nula změn vzhledu/funkce. Buď ti dám každý edit k vykopírování (tvůj zvyk), nebo ti vrátím vyčištěný index.html (renderuje se identicky) — co radši?
+K 🔴 #2/#3/#4 a 🔵 položkám řekni ano/ne jednotlivě a doladíme.
+no tak mi dej opravene html ?
+
+Jun 1
+
+Vybral bezpečné opravy a připravil vyčištěný HTML soubor
+Vybral bezpečné opravy a připravil vyčištěný HTML soubor
+Jasně. Aplikuju jen to, co se renderuje 1:1 stejně a nemění chování — localStorage guard (proti pádu) + smazání všeho mrtvého kódu z 🟡 sekce. Věci z 🔴 #2/#3/#4 a 🔵 (stray divy, červené rámečky, reduced-motion, OG, e-mail…) nesahám — ty mění vzhled/chování a čekají na tvoje ano/ne.
+
+Kopíruju soubor k sobě a edituju ho.
+
+
+Odhalování chyby v nahrazení kódu
+Odhalování chyby v nahrazení kódu
+Critical guard hotový. Teď mrtvý kód — reduced-motion blok s neexistujícími selektory:
+
+
+Diagnostikoval chybu a plánoval opravu kódu
+Diagnostikoval chybu a plánoval opravu kódu
+Ups, překlep v editu — vložil jsem omylem duplicitní [data-en]. Opravuju:
+
+
+Odstraňoval zbytečné HTML prvky z kódu
+Odstraňoval zbytečné HTML prvky z kódu
+Opraveno. Teď .num selektor (řádek ~81):
+
+
+Vyhledal chybějící CSS blok pro opravu
+Vyhledal chybějící CSS blok pro opravu
+Teď velký blok mrtvého MODAL CSS:
+
+
+Zkoušel opravit HTML s responzivními pravidly
+Zkoušel opravit HTML s responzivními pravidly
+Teď zbytky modalu v responsive + .nav-cta display:none:
+
+
+Zkoumala chybějící CSS pravidlo pro aktivní sekci
+Zkoumala chybějící CSS pravidlo pro aktivní sekci
+Teď druhý .num selektor (v active sekci):
+
+
+Identifikoval chyby v kódu a plánoval opravy
+Identifikoval chyby v kódu a plánoval opravy
+CSS hotové. Teď JavaScript — enableIntro parametr (nikde se nečte):
+
+
+Walidując składnię i potwierdzając wygląd HTML
+Walidując składnię i potwierdzając wygląd HTML
+Teď mrtvá navH proměnná a zavádějící komentář:
+
+
+Weryfikując czystość kodu i potwierdzając poprawność selektorów
+Weryfikując czystość kodu i potwierdzając poprawność selektorów
+Všechny edity hotové. Teď validace — JS syntax + kontrola, že jsem nesmazal nic, co jsem neměl, a že stránka je funkčně/vizuálně identická:
+
+
+Ověřování čistoty a správnosti všech úprav
+Ověřování čistoty a správnosti všech úprav
+JS validní, mrtvý kód pryč, kritický guard uvnitř, vzhledové položky netknuté. Pro jistotu ještě diff proti originálu — ať vidím, že se změnilo přesně jen to, co mělo:
+
+
+Zvalidoval změny a připravil opravenou verzi
+Zvalidoval změny a připravil opravenou verzi
+Diff je čistý — každá změna je přesně jeden z plánovaných edytů, nic navíc. Žádný dotek do markupu, barev, layoutu, animací, ani do těch sporných vzhledových položek (stray divy, ::selection, červené rámečky zůstaly tak jak byly). Soubor je z 1455 na 1374 řádků, JS validní.
+
+Kopíruju do výstupu:
+
+
+Připravil shrnutí aplikovaných změn a zbývajících rozhodnutí
+Připravil shrnutí aplikovaných změn a zbývajících rozhodnutí
+Hotovo. Co je v souboru oproti tvému originálu:
+
+Opraveno (kritické):
+
+localStorage obalený try/catch na obou místech (zápis i init) — web už nespadne v Safari privátním režimu / v iframe / při zakázaném úložišti.
+Smazaný mrtvý kód (renderuje se 1:1 stejně): celý MODAL CSS blok (~49 ř.), .nav-cta, .nav-drawer-bottom, oba mrtvé .num selektory, reduced-motion blok s neexistujícími selektory, navH proměnná, mrtvá -m smyčka v setLang, nepoužitý parametr enableIntro (3 místa), zavádějící komentář. Dohromady −81 řádků.
+
+Nesahal jsem (mění vzhled/chování, čeká na tvoje ano/ne):
+
+🔴 stray <div> v <style> co zabíjí ::selection (oprava = červený výběr textu se vrátí)
+🔴 červené rámečky na prázdných polích hned po načtení (oprava = přidat placeholder=" ")
+🔴 reduced-motion se reálně nedodržuje (oprava = chování pro citlivé uživatele)
+🔵 30vh mezera nad footerem, OG tagy, matej@ vs info@, h3 nadpisy
+Řekni číslo a doděláme. Jinak je tohle bezpečná čistá verze k nahrání.
+
+
+Index
+Code · HTML 
+v dotfieldu jsi mi dal scroll na celou plochu chtel jsem az 250px dole zmenil jsi mi funkcionalitu!!!
+
+Jun 1
+
+Identifikoval chybu, zvážil opravy a připravil řešení
+Identifikoval chybu, zvážil opravy a připravil řešení
+Máš pravdu a omlouvám se — když jsem ve starším kroku řešil to „klepání", vyhodil jsem preventDefault a tím i tu logiku, že scroll funguje jen v dolním pruhu. To byla chyba, scroll se rozlil na celou plochu. Vracím to.
+
+Podívám se na aktuální stav handleru v souboru:
+
+
+Ran a command, viewed a file, edited a file
+Ran a command, viewed a file, edited a file
+
+index(1).html
+html
+
+v dotfieldu jsi mi dal scroll na celou plochu chtel jsem az 250px dole zmenil jsi mi funkcionalitu!!!
+
+3:18 PM
+Promiň, beru to z tohohle nahraného souboru (ne z mojí verze), ať pracuju s tím, co máš teď reálně u sebe. Mrknu na aktuální touch handler.
+
+
+Ran a command, viewed a file
+Ran a command, viewed a file
+Vidím to — tahle verze nemá to gatování vůbec, scroll jde po celé ploše. Vracím dolní 250px zónu. Edituju přímo tenhle nahraný soubor (zkopíruju k sobě):
+
+
+Ran 2 commands, edited a file
+Ran 2 commands, edited a file
+Diff potvrzuje, že se změnil jen touch blok, nic jiného. JS validní.
+
+Jak to teď funguje — rozhodnutí padne v moment dotyku (touchstart), ne při každém pohybu:
+
+Prst přiložíš nad spodními 250px → tečky se táhnou, scroll je zablokovaný (celé gesto, i kdybys sjel prstem dolů).
+Prst přiložíš ve spodních 250px → stránka normálně scrolluje.
+To „klepání" z dřívějška vznikalo přesně tím, že se to vyhodnocovalo uvnitř touchmove na každém snímku — sem tam frame propustil, jinde blokoval. Tím, že se to zamkne na začátku gesta, je to plynulé.
+
+
+Ran a command, read a file
+Ran a command, read a file
+Hotovo — scroll-through zóna je zpátky na spodních 250px, zbytek souboru beze změny. Pokud bys chtěl jinou výšku (200 / 300), je to jen to jedno číslo 250 na řádku 1076.
+
+
+Index
+Code · HTML 
+porad tam ale na dolni strane dotfieldu jsou te teckz co se odrayi taj jsou cropovanz, potrebuji o neco vic treba 20 px vice mista abz se dole necropovali, nahore muyou tam je horni lista tam to nevadi
+
+4:50 PM
+
+Řešení oříznutí teček nastavením paddingu
+Řešení oříznutí teček nastavením paddingu
+Mrknu, jak se teď počítá grid v aktuálním souboru — ať vidím, jestli tam ten pad vůbec je a jak.
+
+
+Diagnostikoval problém s ořezáváním teček a navrhoval řešení
+Diagnostikoval problém s ořezáváním teček a navrhoval řešení
+Vidím — máš symetrický pad = 10 na všech stranách (řádek 1043). Při odrazu spodní řada vyjede za overflow: hidden a ořízne se. Rozdělím vertikální mezeru: nahoře nechám 10px, dole dám 30px (= o 20px víc rezervy). Horizontálně i dividery zůstanou netknuté.
+
+
+Edited a file, ran a command
+Edited a file, ran a command
+Diff je čistý — oproti tvému nahranému souboru se změnily jen dvě věci: scroll zóna (250px, z minula) a teď tahle spodní rezerva. Nic víc.
+
+Jak to funguje: vertikální mezera je teď nesymetrická — nahoře 10px, dole 30px. Klidová mřížka se posune o 20px výš od spodní hrany, takže odražené tečky mají dole rezervu a nepřetečou přes overflow: hidden. Horní lišta to nahoře kryje, takže tam těch 10px nevadí. Dividery beze změny (jsou singleRow, centrují se na H/2).
+
+
+Ran a command, read a file
+Ran a command, read a file
+Hotovo. Pokud by 20px pořád nestačilo na nejsilnější odrazy, stačí zvednout to jedno číslo 30 (řádek 1044) — třeba na 40 nebo 50 (= 30/40px navíc dole).
+
+
+Index
+Code · HTML 
+
+
+
+
+
+
+Claude is AI and can make mistakes. Please double-check responses.
+
+
+raw
+Index · HTML
 <!DOCTYPE html>
 <html lang="cs">
 <head>
@@ -11,7 +417,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-
+ 
 /* ═══════════════════════════════════════
    BRAND TOKENS
 ═══════════════════════════════════════ */
@@ -24,24 +430,24 @@
   --light: #C8C8C4;
   --cloud: #F0F0EC;
   --mono:  'JetBrains Mono', monospace;
-
+ 
   /* MAX-WIDTH KONTAJNER PRE 4K */
   --max-w: 1440px;
-
+ 
   --pad-x: 40px;
   --pad-x-mob: 20px;
   --nav-h: 140px;
   --section-pad-y: 88px;     /* väčší spacing medzi sekciami */
 }
-
+ 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }<div style="height: 50vh;"></div>
 ::selection { background: var(--red); color: var(--paper); }
-
+ 
 html {
   scroll-behavior: smooth;
   scroll-padding-top: var(--nav-h);
 }
-
+ 
 body {
   font-family: var(--mono);
   background: var(--paper);
@@ -50,7 +456,7 @@ body {
   line-height: 1.7;
   -webkit-font-smoothing: antialiased;
 }
-
+ 
 /* ── PRIMITIVES ── */
 .section {
   padding: var(--section-pad-y) var(--pad-x);
@@ -59,7 +465,7 @@ body {
   max-width: var(--max-w);
   margin: 0 auto;
 }
-
+ 
 .section-label {
   font-size: 11px;
   letter-spacing: 0.3em;
@@ -70,7 +476,7 @@ body {
   align-items: center;
   gap: 10px;
 }
-
+ 
 .section-title {
   font-size: 28px;                /* zväčšené pre kontrast */
   font-weight: 500;               /* viac váhy */
@@ -78,18 +484,18 @@ body {
   color: var(--ink);
   line-height: 1.2;
 }
-
+ 
 .body-text {
   font-size: 15px;                /* zväčšené z 14 */
   line-height: 1.75;
   color: var(--mid);
   max-width: 60ch;                /* riadky nie sú nekonečné */
 }
-
+ 
 [data-en] { display: none; }
 .lang-en [data-cs] { display: none; }
 .lang-en [data-en] { display: inline; }
-
+ 
 /* ═══════════════════════════════════════
    DOT DIVIDER — interaktívny, rovnaký raster ako hero
 ═══════════════════════════════════════ */
@@ -110,7 +516,7 @@ body {
   height: 100%;
   display: block;
 }
-
+ 
 /* ═══════════════════════════════════════
    NAV
 ═══════════════════════════════════════ */
@@ -126,7 +532,7 @@ body {
   padding: 0 var(--pad-x);
   gap: 24px;
 }
-
+ 
 .nav-logo { height: 70px; display: block; flex-shrink: 0; }
 .nav-logo img { height: 100%; width: auto; display: block; }
 .nav-links {
@@ -151,7 +557,7 @@ body {
 .nav-links a.active { color: var(--paper); background: var(--red); padding: 4px 8px; }
 .nav-links a.active::after { display: none; }
 .nav-right { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
-
+ 
 .lang-toggle { display: flex; border: 1px solid var(--light); }
 .lang-btn {
   font-family: var(--mono);
@@ -166,7 +572,7 @@ body {
   min-height: 28px;
 }
 .lang-btn.active { background: var(--ink); color: var(--paper); }
-
+ 
 .hamburger {
   display: none;
   flex-direction: column;
@@ -180,7 +586,7 @@ body {
 .hamburger.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
 .hamburger.open span:nth-child(2) { opacity: 0; }
 .hamburger.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
-
+ 
 .nav-drawer {
   display: none;
   position: fixed;
@@ -204,7 +610,7 @@ body {
   padding: 14px 0;                /* väčší touch target */
   border-bottom: 1px solid var(--light);
 }
-
+ 
 /* ═══════════════════════════════════════
    HERO — interaktívne dot pole ako pozadie
 ═══════════════════════════════════════ */
@@ -221,7 +627,7 @@ body {
 }
 #home.launching { cursor: default; }
 #home.launching #dothint { opacity: 0; }
-
+ 
 #dotcanvas {
   position: absolute;
   inset: 0;
@@ -230,7 +636,7 @@ body {
   display: block;
   z-index: 0;
 }
-
+ 
 .hero-content {
   position: relative;
   z-index: 1;
@@ -245,7 +651,7 @@ body {
 }
 .hero-content a,
 .hero-content button { pointer-events: auto; }
-
+ 
 /* text "zatahne sa" doľava pri spustení prohliadky */
 .hero-content {
   transition: opacity 0.7s cubic-bezier(0.6,0,0.3,1),
@@ -261,7 +667,7 @@ body {
 }
 .hero-content.away a,
 .hero-content.away button { pointer-events: none; }
-
+ 
 /* ─── TOUR STAGE — prohlídka beží priamo v #home, namiesto modalu ─── */
 .tour-stage {
   position: absolute;
@@ -314,7 +720,7 @@ color: var(--paper);
   .tour-btn { padding: 6px 10px; font-size: 9px; }
   .tour-btn.close { width: 34px; height: 34px; }
 }
-
+ 
 /* Hero H1 — DRAMATICKY VÄČŠÍ */
 .hero-h1 {
   font-size: clamp(40px, 7vw, 88px);
@@ -326,7 +732,7 @@ color: var(--paper);
   margin-bottom: 24px;
 }
 .hero-h1 em { font-style: normal; color: var(--mid); font-weight: 400; }
-
+ 
 .hero-sub {
   font-size: 16px;
   line-height: 1.75;
@@ -334,9 +740,9 @@ color: var(--paper);
   max-width: 48ch;
   margin-bottom: 40px;
 }
-
+ 
 .hero-actions { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
-
+ 
 .btn {
   font-family: var(--mono);
   font-size: 11px;
@@ -353,7 +759,7 @@ color: var(--paper);
   min-height: 44px;
 }
 .btn:hover { background: transparent; color: var(--ink); }
-
+ 
 .btn-ghost {
   font-family: var(--mono);
   font-size: 11px;
@@ -368,7 +774,7 @@ color: var(--paper);
   padding: 14px 4px;              /* touch target */
 }
 .btn-ghost:hover { color: var(--ink); }
-
+ 
 /* Hint pod heroom */
 #dothint {
   position: absolute;
@@ -386,7 +792,7 @@ color: var(--paper);
   font-family: var(--mono);
 }
 #home.touched #dothint { opacity: 0; }
-
+ 
 /* ═══════════════════════════════════════
    GALLERY
 ═══════════════════════════════════════ */
@@ -394,7 +800,7 @@ color: var(--paper);
   padding: var(--section-pad-y) var(--pad-x);
 }
 #gallery > .gallery-inner { max-width: var(--max-w); margin: 0 auto; }
-
+ 
 .gallery-header {
   display: flex;
   justify-content: space-between;
@@ -402,13 +808,13 @@ color: var(--paper);
   margin-bottom: 32px;
 }
 .gallery-count { font-size: 11px; letter-spacing: 0.08em; color: var(--mid); }
-
+ 
 .gallery-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 6px;
 }
-
+ 
 .g-card {
   background: var(--cloud);
   border: 1px solid var(--light);
@@ -419,7 +825,7 @@ color: var(--paper);
 .g-card:hover { border-color: var(--ink); }
 .g-card:hover .g-overlay { opacity: 1; }
 .g-card:hover .g-dots { opacity: 0.28; }
-
+ 
 .g-thumb { aspect-ratio: 16/10; position: relative; overflow: hidden; background: var(--cloud); }
 .g-dots {
   position: absolute; inset: 0;
@@ -450,7 +856,7 @@ color: var(--paper);
 }
 .g-name { font-size: 12px; letter-spacing: 0.04em; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 72%; }
 .g-info { font-size: 10px; letter-spacing: 0.06em; color: var(--mid); }
-
+ 
 /* ═══════════════════════════════════════
    PROCESS
 ═══════════════════════════════════════ */
@@ -458,11 +864,11 @@ color: var(--paper);
   padding: var(--section-pad-y) var(--pad-x);
 }
 #process > .process-inner { max-width: var(--max-w); margin: 0 auto; }
-
+ 
 .process-header { margin-bottom: 40px; }
-
+ 
 .process-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-
+ 
 .process-step {
   background: var(--cloud);
   border: 1px solid var(--light);
@@ -479,7 +885,7 @@ color: var(--paper);
 .process-num { font-size: 11px; letter-spacing: 0.3em; text-transform: lowercase; color: var(--red); margin-bottom: 18px; }
 .process-name { font-size: 18px; font-weight: 500; color: var(--ink); margin-bottom: 10px; line-height: 1.3; }
 .process-desc { font-size: 13px; letter-spacing: 0.02em; color: var(--mid); line-height: 1.7; }
-
+ 
 /* ═══════════════════════════════════════
    ABOUT
 ═══════════════════════════════════════ */
@@ -501,7 +907,7 @@ color: var(--paper);
 .about-text .section-title { margin-bottom: 18px; margin-top: 2px; }
 .tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 24px; }
 .tag { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); border: 1px solid var(--light); padding: 5px 10px; }
-
+ 
 /* ═══════════════════════════════════════
    USE CASES
 ═══════════════════════════════════════ */
@@ -509,7 +915,7 @@ color: var(--paper);
   padding: var(--section-pad-y) var(--pad-x);
 }
 #usecases > .uc-inner { max-width: var(--max-w); margin: 0 auto; }
-
+ 
 .uc-header { margin-bottom: 36px; }
 .uc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .uc-item {
@@ -525,7 +931,7 @@ color: var(--paper);
 .uc-num  { font-size: 10px; letter-spacing: 0.28em; text-transform: lowercase; color: var(--mid); margin-bottom: 14px; }
 .uc-name { font-size: 15px; font-weight: 500; color: var(--ink); margin-bottom: 10px; line-height: 1.3; }
 .uc-desc { font-size: 13px; letter-spacing: 0.02em; color: var(--mid); line-height: 1.65; }
-
+ 
 /* ═══════════════════════════════════════
    CONTACT
 ═══════════════════════════════════════ */
@@ -545,7 +951,7 @@ color: var(--paper);
 .channel-label { font-size: 10px; letter-spacing: 0.28em; text-transform: lowercase; color: var(--mid); min-width: 72px; }
 .channel-value { font-size: 14px; color: var(--ink); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
 .channel-value:hover { border-bottom-color: var(--red); }
-
+ 
 .form { display: flex; flex-direction: column; gap: 14px; }
 .field { display: flex; flex-direction: column; gap: 6px; }
 .field label { font-size: 10px; letter-spacing: 0.28em; text-transform: lowercase; color: var(--mid); }
@@ -585,9 +991,9 @@ color: var(--paper);
 }
 .form-submit:hover { background: var(--red); border-color: var(--red); color: var(--paper); }
 .form-note { font-size: 10px; letter-spacing: 0.06em; color: var(--mid); margin-top: 4px; }
-
-
-
+ 
+ 
+ 
 /* ═══════════════════════════════════════
    FOOTER
 ═══════════════════════════════════════ */
@@ -608,7 +1014,7 @@ footer {
 .footer-links { display: flex; gap: 20px; }
 .footer-link { font-size: 10px; letter-spacing: 0.24em; text-transform: lowercase; color: var(--mid); text-decoration: none; transition: color 0.15s; padding: 8px 0; }
 .footer-link:hover { color: var(--red); }
-
+ 
 /* ═══════════════════════════════════════
    RESPONSIVE
 ═══════════════════════════════════════ */
@@ -616,7 +1022,7 @@ footer {
   :root { --section-pad-y: 64px; --pad-x: 24px; }
   .nav-links { display: none; }
   .hamburger { display: flex; }
-
+ 
   .gallery-grid { grid-template-columns: repeat(2, 1fr); }
   .process-grid { grid-template-columns: 1fr; }
   #about > .about-inner    { grid-template-columns: 1fr; gap: 36px; }
@@ -625,7 +1031,7 @@ footer {
   footer { flex-direction: column; gap: 20px; align-items: center; }
   .footer-logo { height: 32px; }
 }
-
+ 
 @media (max-width: 600px) {
   :root { --section-pad-y: 56px; --pad-x: 20px; --nav-h: 80px; }
   .nav { padding: 0 var(--pad-x-mob); }
@@ -635,11 +1041,11 @@ footer {
   .form-row { grid-template-columns: 1fr; }
   .channel { flex-direction: column; gap: 4px; }
   .channel-label { min-width: 0; }
-
+ 
   /* divider menší na mobile */
   .dot-divider { height: 76px; }
 }
-
+ 
    #dotcanvas, .dot-divider canvas {
   -webkit-user-select: none;
   user-select: none;
@@ -648,13 +1054,13 @@ footer {
 .section-label.active { color: var(--paper); display: inline-flex; }
 .section-label.active span:not(.num) { background: var(--red); padding: 2px 6px; }
 .nav-drawer a.active { color: var(--paper); background: var(--red); }
-
+ 
    
 </style>
 </head>
-
+ 
 <body id="body" class="lang-cs">
-
+ 
 <!-- ═══ NAV ═══ -->
 <nav class="nav" id="nav">
   <a href="#home" class="nav-logo" aria-label="flyingcat">
@@ -677,16 +1083,16 @@ footer {
     </button>
   </div>
 </nav>
-
+ 
 <nav class="nav-drawer" id="nav-drawer">
   <a href="#gallery"  onclick="closeMenu()"><span data-cs>prohlídky</span><span data-en>gallery</span></a>
   <a href="#process"  onclick="closeMenu()"><span data-cs>proces</span><span data-en>process</span></a>
   <a href="#about"    onclick="closeMenu()"><span data-cs>o nás</span><span data-en>about</span></a>
   <a href="#usecases" onclick="closeMenu()"><span data-cs>využití</span><span data-en>use cases</span></a>
   <a href="#contact"  onclick="closeMenu()"><span data-cs>kontakt</span><span data-en>contact</span></a>
-
+ 
 </nav>
-
+ 
 <!-- ═══ HERO — interactive dot field ═══ -->
 <section id="home" aria-labelledby="hero-heading">
   <canvas id="dotcanvas" aria-hidden="true"></canvas>
@@ -721,7 +1127,7 @@ footer {
     <div class="tour-iframe-wrap" id="tour-iframe-wrap"></div>
   </div>
 </section>
-
+ 
 <!-- ═══ GALLERY ═══ -->
 <section id="gallery" aria-labelledby="gallery-heading">
   <div class="gallery-inner">
@@ -735,12 +1141,12 @@ footer {
     <div class="gallery-grid" id="gallery-grid"></div>
   </div>
 </section>
-
+ 
 <!-- ═══ DIVIDER 2 ═══ -->
 <div class="dot-divider" aria-hidden="true" data-divider>
   <canvas></canvas>
 </div>
-
+ 
 <!-- ═══ PROCESS ═══ -->
 <section id="process" aria-labelledby="process-heading">
   <div class="process-inner">
@@ -770,12 +1176,12 @@ footer {
     </div>
   </div>
 </section>
-
+ 
 <!-- ═══ DIVIDER 3 ═══ -->
 <div class="dot-divider" aria-hidden="true" data-divider>
   <canvas></canvas>
 </div>
-
+ 
 <!-- ═══ ABOUT ═══ -->
 <section id="about" aria-labelledby="about-heading">
   <div class="about-inner">
@@ -802,12 +1208,12 @@ footer {
     </div>
   </div>
 </section>
-
+ 
 <!-- ═══ DIVIDER 4 ═══ -->
 <div class="dot-divider" aria-hidden="true" data-divider>
   <canvas></canvas>
 </div>
-
+ 
 <!-- ═══ USE CASES ═══ -->
 <section id="usecases" aria-labelledby="uc-heading">
   <div class="uc-inner">
@@ -825,12 +1231,12 @@ footer {
     </div>
   </div>
 </section>
-
+ 
 <!-- ═══ DIVIDER 5 ═══ -->
 <div class="dot-divider" aria-hidden="true" data-divider>
   <canvas></canvas>
 </div>
-
+ 
 <!-- ═══ CONTACT ═══ -->
 <section id="contact" aria-labelledby="contact-heading">
   <div class="contact-inner">
@@ -881,7 +1287,7 @@ footer {
     </form>
   </div>
 </section>
-
+ 
 <!-- ═══ DIVIDER 6 ═══ -->
 <div class="dot-divider" aria-hidden="true" data-divider>
   <canvas></canvas>
@@ -898,12 +1304,12 @@ footer {
     <a href="mailto:matej@flyingcat.services" class="footer-link">e-mail</a>
   </nav>
 </footer>
-
+ 
 <script>
 // ════════════════════════════════════════════════════════════
 // DOT FIELD — interaktívne pole + 3 intro animácie + launch sekvencia
 // ════════════════════════════════════════════════════════════
-
+ 
 // ── viewport config ──
 function dotConfigForViewport() {
   const w = window.innerWidth;
@@ -912,28 +1318,28 @@ function dotConfigForViewport() {
   }
   return { spacing: 24, dotRadius: 2.2, radiusActive: 5.2, influence: 170, pushStrength: 32, ease: 0.12, easeReturn: 0.04 };
 }
-
+ 
 const COLORS = { inkRGB: [10, 10, 10], redRGB: [184, 49, 44] };
-
+ 
 // ── helpers ──
 const easeInCubic  = t => t * t * t;
 const easeInQuad   = t => t * t;
 const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
 const clampN = (v, a, b) => v < a ? a : (v > b ? b : v);
-
+ 
 // ════════════════════════════════════════════════════════════
 // INTRO ANIMÁCIE — každá je čistá funkcia (d, p, t, E)
 //   E = { W, H, spacing }
 //   štart: tečka v rastri (ox/oy) → odíde z obrazu (žiadny návrat)
 //   nastavuje: d.x, d.y, d.heat, d.alpha
 // ════════════════════════════════════════════════════════════
-
+ 
 // 1 — ZÁVĚSY: od stredu sa rozhrnú do strán ako opona, nepravidelné vlny
 function introZaves(d, p, t, E) {
   const cx = E.W / 2;
   let side = d.ox < cx ? -1 : 1;
   if (Math.abs(d.ox - cx) < E.spacing * 0.5) side = (d.col % 2 === 0) ? -1 : 1;
-
+ 
   const hx = Math.abs(d.ox - cx) / (E.W / 2);
   const y = d.oy;
   const wave =
@@ -941,18 +1347,18 @@ function introZaves(d, p, t, E) {
       Math.sin(y * 0.013 + t * 0.0015 + 2.1) * 0.30 +
       Math.sin(y * 0.031 + t * 0.0031 + 4.2) * 0.18;
   const releaseP = clampN(hx * 0.5 + wave * 0.12, 0, 0.9);
-
+ 
   const lp = clampN((p - releaseP) / (1 - releaseP), 0, 1);
   const e = easeInCubic(lp);
   const travel = side * (E.W * 1.15) * e;
   const wob = Math.sin(y * 0.05 + t * 0.004 + d.seed * 6.283) * 5 * lp;
-
+ 
   d.x = d.ox + travel;
   d.y = d.oy + wob;
   d.heat = clampN(1 - lp * 1.8, 0, 1) * (lp > 0 ? 1 : 0) * 0.6;
   d.alpha = 1;
 }
-
+ 
 // 2 — PÁD: uvoľnia sa a padajú dole s gravitáciou, rozfázovane, bez odrazu
 function introPad(d, p, t, E) {
   const releaseP = clampN(d.seed * 0.38 + (d.row / d.rows) * 0.06, 0, 0.45);
@@ -971,7 +1377,7 @@ function introPad(d, p, t, E) {
   d.heat = clampN(0.5 - lt * 5, 0, 1) * 0.5;
   d.alpha = 1;
 }
-
+ 
 // 3 — KOULE: zo stredu sa priženie guľa, roztrhne obraz, tečky von do všetkých strán
 function introKoule(d, p, t, E) {
   const cx = E.W / 2, cy = E.H / 2;
@@ -981,7 +1387,7 @@ function introKoule(d, p, t, E) {
   if (dist < 0.0001) dist = 0.0001;
   const ang = Math.atan2(dy, dx) + (d.seed - 0.5) * 0.22;
   const ux = Math.cos(ang), uy = Math.sin(ang);
-
+ 
   const P_ANT = 0.16;
   if (p < P_ANT) {                                   // napätie: guľa sa priženie, stred žiari
     const a = p / P_ANT;
@@ -993,7 +1399,7 @@ function introKoule(d, p, t, E) {
     d.alpha = 1;
     return;
   }
-
+ 
   const ep = (p - P_ANT) / (1 - P_ANT);              // explózia
   const waveR = easeOutCubic(ep) * maxR * 1.7;
   const hit = waveR - dist;
@@ -1013,10 +1419,10 @@ function introKoule(d, p, t, E) {
     d.alpha = clampN(1 - excess * 1.0, 0, 1);
   }
 }
-
+ 
 const INTRO_ANIMS = [introZaves, introPad, introKoule];
 const INTRO_DUR_MS = 5000;   // dĺžka intro animácie (laditeľné)
-
+ 
 // ════════════════════════════════════════════════════════════
 // DOT FIELD ENGINE  — hero (interactive + intro) aj dividery (len interactive)
 //   perf: rAF beží len keď je pole viditeľné a niečo sa deje
@@ -1026,12 +1432,12 @@ function makeDotField({ container, canvas, singleRow }) {
   let dots = [], W = 0, H = 0, dpr = 1;
   let cfg = dotConfigForViewport();
   const ptr = { x: -9999, y: -9999, active: false };
-
+ 
   let mode = 'interactive';   // interactive | hold | intro | cleared
   let introAnim = null, introStart = 0, introDone = null;
-
+ 
   let running = false, visible = true, settled = false;
-
+ 
   function build() {
     cfg = dotConfigForViewport();
     dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -1039,13 +1445,14 @@ function makeDotField({ container, canvas, singleRow }) {
     W = r.width; H = r.height;
     canvas.width = W * dpr; canvas.height = H * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
+ 
   const pad = 10;
+  const padBottom = 30;   // o 20px viac dole — rezerva pre odrazené tečky (hore to kryje lišta)
     const cols = Math.floor((W - pad * 2) / cfg.spacing) + 1;
-    const rows = singleRow ? 1 : Math.floor((H - pad * 2) / cfg.spacing) + 1;
+    const rows = singleRow ? 1 : Math.floor((H - pad - padBottom) / cfg.spacing) + 1;
     const ox = pad + ((W - pad * 2) - (cols - 1) * cfg.spacing) / 2;
-    const oy = singleRow ? H / 2 : pad + ((H - pad * 2) - (rows - 1) * cfg.spacing) / 2;
-
+    const oy = singleRow ? H / 2 : pad + ((H - pad - padBottom) - (rows - 1) * cfg.spacing) / 2;
+ 
     dots = [];
     for (let r2 = 0; r2 < rows; r2++) {
       for (let c = 0; c < cols; c++) {
@@ -1055,7 +1462,7 @@ function makeDotField({ container, canvas, singleRow }) {
     }
     settled = false;
   }
-
+ 
   function setPtr(cx, cy, active) {
     const r = container.getBoundingClientRect();
     ptr.x = cx - r.left; ptr.y = cy - r.top; ptr.active = active;
@@ -1068,14 +1475,24 @@ function makeDotField({ container, canvas, singleRow }) {
   window.addEventListener('mouseup', () => { ptr.active = false; });
   container.addEventListener('mouseleave', () => { ptr.x = -9999; ptr.y = -9999; });
   const tOpts = { passive: true };
-  container.addEventListener('touchstart', e => { if (mode === 'interactive') { const t = e.touches[0]; setPtr(t.clientX, t.clientY, true); } }, tOpts);
-container.addEventListener('touchmove', e => {
-   if (mode === 'interactive') { const t = e.touches[0]; setPtr(t.clientX, t.clientY, true); }
-   }, tOpts);
+  let allowScroll = false;   // per-gesto: ak ťah začal v spodnom pruhu, necháme stránku scrollovať
+  container.addEventListener('touchstart', e => {
+    if (mode !== 'interactive') return;
+    const t = e.touches[0];
+    const r = container.getBoundingClientRect();
+    allowScroll = t.clientY >= r.bottom - 250;   // spodných 250px = scroll-through zóna
+    setPtr(t.clientX, t.clientY, true);
+  }, tOpts);
+  container.addEventListener('touchmove', e => {
+    if (mode !== 'interactive') return;
+    const t = e.touches[0];
+    if (!allowScroll) e.preventDefault();          // mimo spodnú zónu → blokuj scroll, ťahaj tečky
+    setPtr(t.clientX, t.clientY, true);
+  }, { passive: false });
   container.addEventListener('touchend', () => { ptr.active = false; ptr.x = -9999; ptr.y = -9999; });
-
+ 
   function lerp(a, b, t) { return a + (b - a) * t; }
-
+ 
   function drawDot(d) {
     const a = d.alpha;
     if (a <= 0.01) return;
@@ -1091,14 +1508,14 @@ container.addEventListener('touchmove', e => {
     ctx.fill();
     ctx.globalAlpha = 1;
   }
-
+ 
   function ensureRunning() { if (!running) { running = true; requestAnimationFrame(frame); } }
-
+ 
   function frame(now) {
     ctx.clearRect(0, 0, W, H);
-
+ 
     if (mode === 'cleared') { running = false; return; }
-
+ 
     if (mode === 'intro') {
       const p = Math.min((now - introStart) / INTRO_DUR_MS, 1);
       const E = { W, H, spacing: cfg.spacing };
@@ -1111,7 +1528,7 @@ container.addEventListener('touchmove', e => {
       requestAnimationFrame(frame);
       return;
     }
-
+ 
     if (mode === 'hold') {
       for (let i = 0; i < dots.length; i++) {
         const d = dots[i];
@@ -1123,7 +1540,7 @@ container.addEventListener('touchmove', e => {
       requestAnimationFrame(frame);
       return;
     }
-
+ 
     // interactive
     if (!visible) { running = false; return; }      // off-screen → stop rAF (perf)
     const inf2 = cfg.influence * cfg.influence;
@@ -1155,7 +1572,7 @@ container.addEventListener('touchmove', e => {
     if (!moving && ptr.x < -9000) { settled = true; running = false; return; }  // idle → stop
     requestAnimationFrame(frame);
   }
-
+ 
   // ── controller (hero) ──
   function hold() { mode = 'hold'; ensureRunning(); }
   function playIntro(animFn, onDone) {
@@ -1171,7 +1588,7 @@ container.addEventListener('touchmove', e => {
     mode = 'interactive'; settled = false;
     ensureRunning();
   }
-
+ 
   // ── visibility (perf): pauza mimo obrazovky ──
   new IntersectionObserver(es => {
     es.forEach(en => {
@@ -1179,15 +1596,15 @@ container.addEventListener('touchmove', e => {
       if (visible) { if (mode === 'interactive') settled = false; ensureRunning(); }
     });
   }, { threshold: 0 }).observe(container);
-
+ 
   build();
   ensureRunning();
   let rt;
   window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { build(); ensureRunning(); }, 150); });
-
+ 
   return { hold, playIntro, reset };
 }
-
+ 
 // ── inštancie ──
 const hero = makeDotField({
   container: document.getElementById('home'),
@@ -1196,7 +1613,7 @@ const hero = makeDotField({
 document.querySelectorAll('[data-divider]').forEach(div => {
   makeDotField({ container: div, canvas: div.querySelector('canvas'), singleRow: true });
 });
-
+ 
 // ════════════════════════════════════════════════════════════
 // GALLERY DATA
 // ════════════════════════════════════════════════════════════
@@ -1204,7 +1621,7 @@ const TOURS = [
   { slug: 'testing-x01', name_cs: 'testovací scéna', name_en: 'test scene', type_cs: 'demo · 2025', type_en: 'demo · 2025' },
 ];
 const BASE_URL = 'https://{slug}.flyingcat.services';
-
+ 
 function buildGallery() {
   const grid  = document.getElementById('gallery-grid');
   const count = document.getElementById('gallery-count');
@@ -1227,7 +1644,7 @@ function buildGallery() {
   const word = lang === 'en' ? (TOURS.length === 1 ? 'scene' : 'scenes') : (TOURS.length === 1 ? 'scéna' : TOURS.length < 5 ? 'scény' : 'scén');
   count.textContent = `${TOURS.length} ${word}`;
 }
-
+ 
 // ════════════════════════════════════════════════════════════
 // LAUNCH SEKVENCIA  (in-place v #home, žiadny modal)
 //   klik na prohliadku → scroll hore → text zatahne sa doľava →
@@ -1236,7 +1653,7 @@ function buildGallery() {
 const INTRO_HOLD_MS = 2600;
 let currentUrl = '';
 let launchTimer = null;
-
+ 
 function prepareTour(url, name) {
   currentUrl = url;
   document.getElementById('tour-title').textContent = name;
@@ -1245,7 +1662,7 @@ function prepareTour(url, name) {
   document.getElementById('tour-iframe-wrap').innerHTML =
     `<iframe src="${url}" title="${name}" allowfullscreen loading="eager"></iframe>`;
 }
-
+ 
 function launchTour(url, name) {
   prepareTour(url, name);
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1256,12 +1673,12 @@ function launchTour(url, name) {
   clearTimeout(launchTimer);
   launchTimer = setTimeout(() => hero.playIntro(pick, revealTour), INTRO_HOLD_MS);
 }
-
+ 
 function revealTour() {
   document.getElementById('tour-stage').classList.add('open');
   document.getElementById('tour-stage').setAttribute('aria-hidden', 'false');
 }
-
+ 
 function closeTour() {
   clearTimeout(launchTimer);
   const stage = document.getElementById('tour-stage');
@@ -1275,19 +1692,19 @@ function closeTour() {
     hero.reset();
   }, 560);
 }
-
+ 
 function openTourFullscreen() {
   const iframe = document.querySelector('#tour-iframe-wrap iframe');
   if (iframe && iframe.requestFullscreen) iframe.requestFullscreen();
   else if (currentUrl) window.open(currentUrl, '_blank');
 }
-
+ 
 document.getElementById('tour-close').addEventListener('click', closeTour);
 document.getElementById('tour-fs').addEventListener('click', openTourFullscreen);
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && document.getElementById('tour-stage').classList.contains('open')) closeTour();
 });
-
+ 
 // ── Language ──
 function setLang(lang) {
   document.body.classList.remove('lang-cs', 'lang-en');
@@ -1298,7 +1715,7 @@ function setLang(lang) {
   try { localStorage.setItem('fc-lang', lang); } catch (e) {}
   buildGallery();
 }
-
+ 
 // ── Mobile menu ──
 function toggleMenu() {
   document.getElementById('hamburger').classList.toggle('open');
@@ -1308,7 +1725,7 @@ function closeMenu() {
   document.getElementById('hamburger').classList.remove('open');
   document.getElementById('nav-drawer').classList.remove('open');
 }
-
+ 
 // ── Active nav on scroll ──
 document.querySelectorAll('.nav-links a').forEach(a => {
   a.addEventListener('click', () => {
@@ -1331,9 +1748,9 @@ document.querySelectorAll('.nav-drawer a').forEach(a => {
 });
 let scrollLock = false;
 let scrollLockTimer;
-
+ 
 const sections = ['home', 'gallery', 'process', 'about', 'usecases', 'contact'];
-
+ 
 function updateActiveNav() {
   if (scrollLock) return;
   const scrollY = window.scrollY + window.innerHeight / 2;
@@ -1350,7 +1767,7 @@ function updateActiveNav() {
     label.classList.toggle('active', section && section.id === current);
   });
 }
-
+ 
 window.addEventListener('scroll', updateActiveNav, { passive: true });
 updateActiveNav();
    
@@ -1364,7 +1781,7 @@ function handleSubmit(e) {
   window.location.href = `mailto:matej@flyingcat.services?subject=${subject}&body=${body}`;
   document.getElementById('form-status').textContent = lang === 'en' ? 'opening your mail client…' : 'otevírám váš e-mailový klient…';
 }
-
+ 
 // ── Init ──
 let savedLang = 'cs';
 try { savedLang = localStorage.getItem('fc-lang') || 'cs'; } catch (e) {}
@@ -1372,3 +1789,8 @@ setLang(savedLang);
 </script>
 </body>
 </html>
+ 
+
+
+
+
