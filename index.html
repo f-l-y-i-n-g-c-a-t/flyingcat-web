@@ -881,7 +881,7 @@ footer {
       <div class="contact-channels">
         <div class="channel">
           <div class="channel-label">e-mail</div>
-          <a href="mailto:matej@flyingcat.services" class="channel-value">matej@flyingcat.services</a>
+          <a href="mailto:info@flyingcat.services" class="channel-value">info@flyingcat.services</a>
         </div>
         <div class="channel">
           <div class="channel-label"><span data-cs>oblast</span><span data-en>area</span></div>
@@ -935,7 +935,7 @@ footer {
   </div>
   <nav class="footer-links">
     <a href="#contact" class="footer-link"><span data-cs>kontakt</span><span data-en>contact</span></a>
-    <a href="mailto:matej@flyingcat.services" class="footer-link">e-mail</a>
+    <a href="mailto:info@flyingcat.services" class="footer-link">e-mail</a>
   </nav>
 </footer>
 
@@ -1425,14 +1425,36 @@ window.addEventListener('scroll', updateActiveNav, { passive: true });
 updateActiveNav();
    
 // ── Contact form ──
-function handleSubmit(e) {
+async function handleSubmit(e) {
   e.preventDefault();
   const f = e.target;
   const lang = document.body.classList.contains('lang-en') ? 'en' : 'cs';
-  const subject = encodeURIComponent('flyingcat — ' + (f.subject.value || 'zpráva'));
-  const body = encodeURIComponent(`Jméno: ${f.name.value}\nE-mail: ${f.email.value}\nTyp: ${f.subject.value}\n\n${f.message.value}`);
-  window.location.href = `mailto:matej@flyingcat.services?subject=${subject}&body=${body}`;
-  document.getElementById('form-status').textContent = lang === 'en' ? 'opening your mail client…' : 'otevírám váš e-mailový klient…';
+  const status = document.getElementById('form-status');
+  const btn = f.querySelector('.form-submit');
+  btn.disabled = true;
+  status.textContent = lang === 'en' ? 'sending…' : 'odesílám…';
+  try {
+    const res = await fetch('https://contact.flyingcat.services/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: f.name.value,
+        email: f.email.value,
+        subject: f.subject.value,
+        message: f.message.value
+      })
+    });
+    if (res.ok) {
+      status.textContent = lang === 'en' ? 'message sent ✓' : 'zpráva odeslána ✓';
+      f.reset();
+    } else {
+      throw new Error('server error');
+    }
+  } catch {
+    status.textContent = lang === 'en' ? 'something went wrong, try again' : 'něco se pokazilo, zkuste znovu';
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 // ── Init ──
