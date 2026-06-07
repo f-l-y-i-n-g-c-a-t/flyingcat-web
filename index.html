@@ -5,11 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="flyingcat — studio pro gaussian splatting prohlídky">
 <meta name="robots" content="noindex, nofollow">
+<!-- Open Graph / sociální náhled -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="flyingcat — záznam prostoru">
+<meta property="og:description" content="fotorealistické gaussian splatting prohlídky prostoru a objektů. doručené na vlastní URL, v každém prohlížeči.">
+<meta property="og:url" content="https://flyingcat.services">
+<meta property="og:image" content="https://flyingcat.services/logo.png">
+<meta property="og:locale" content="cs_CZ">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="flyingcat — záznam prostoru">
+<meta name="twitter:description" content="fotorealistické gaussian splatting prohlídky prostoru a objektů.">
+<meta name="twitter:image" content="https://flyingcat.services/logo.png">
 <title>flyingcat</title>
 <link rel="icon" type="image/png" href="logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 
 /* ═══════════════════════════════════════
@@ -34,7 +45,7 @@
   --section-pad-y: 88px;     /* väčší spacing medzi sekciami */
 }
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }<div style="height: 50vh;"></div>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 ::selection { background: var(--red); color: var(--paper); }
 
 html {
@@ -220,7 +231,6 @@ body {
   cursor: crosshair;
 }
 #home.launching { cursor: default; }
-#home.launching #dothint { opacity: 0; }
 
 #dotcanvas {
   position: absolute;
@@ -325,7 +335,6 @@ color: var(--paper);
   color: var(--ink);
   margin-bottom: 24px;
 }
-.hero-h1 em { font-style: normal; color: var(--mid); font-weight: 400; }
 
 .hero-sub {
   font-size: 16px;
@@ -334,6 +343,7 @@ color: var(--paper);
   color: var(--ink);
   max-width: 48ch;
   margin-bottom: 40px;
+  text-shadow: 0 0 4px var(--paper), 0 0 4px var(--paper), 0 0 8px var(--paper);
 }
 .hero-actions { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
 .btn {
@@ -366,26 +376,9 @@ color: var(--paper);
   text-decoration: none;
   transition: color 0.15s;
   padding: 14px 4px;              /* touch target */
+  text-shadow: 0 0 4px var(--paper), 0 0 4px var(--paper), 0 0 8px var(--paper);
 }
 .btn-ghost:hover { color: var(--ink); }
-
-/* Hint pod heroom */
-#dothint {
-  position: absolute;
-  left: 50%;
-  bottom: 22px;
-  transform: translateX(-50%);
-  font-size: 10px;
-  letter-spacing: 0.3em;
-  text-transform: lowercase;
-  color: var(--light);
-  pointer-events: none;
-  user-select: none;
-  z-index: 2;
-  transition: opacity 0.6s;
-  font-family: var(--mono);
-}
-#home.touched #dothint { opacity: 0; }
 
 /* ═══════════════════════════════════════
    GALLERY
@@ -559,8 +552,10 @@ color: var(--paper);
 #usecases > .uc-inner { max-width: var(--max-w); margin: 0 auto; }
 
 .uc-header { margin-bottom: 36px; }
-.uc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.uc-grid { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
 .uc-item {
+  flex: 0 1 calc(33.333% - 4px);
+  min-width: 0;
   background: var(--cloud);
   border: 1px solid var(--light);
   padding: 26px;
@@ -613,7 +608,9 @@ color: var(--paper);
   border-radius: 0;
 }
 .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--blue); }
-.field input:invalid:not(:placeholder-shown) { border-color: var(--red); }
+.field input:user-invalid, .field textarea:user-invalid { border-color: var(--red); }
+/* honeypot — skryté pole proti spam botom (človek ho nevidí) */
+.hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 .field textarea { resize: vertical; min-height: 120px; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .form-submit {
@@ -668,7 +665,7 @@ footer {
   .process-grid { grid-template-columns: 1fr; }
   #about > .about-inner    { grid-template-columns: 1fr; gap: 36px; }
   #contact > .contact-inner { grid-template-columns: 1fr; gap: 44px; }
-  .uc-grid { grid-template-columns: 1fr; }
+  .uc-item { flex-basis: 100%; }
   footer { flex-direction: column; gap: 20px; align-items: center; }
   .footer-logo { height: 32px; }
 }
@@ -716,8 +713,8 @@ footer {
   </ul>
   <div class="nav-right">
     <div class="lang-toggle">
-      <button class="lang-btn active" id="btn-cs" onclick="setLang('cs')">CS</button>
-      <button class="lang-btn"        id="btn-en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn active" id="btn-cs" onclick="setLang('cs')" aria-pressed="true">CS</button>
+      <button class="lang-btn"        id="btn-en" onclick="setLang('en')" aria-pressed="false">EN</button>
     </div>
     <button class="hamburger" id="hamburger" aria-label="Menu" onclick="toggleMenu()">
       <span></span><span></span><span></span>
@@ -916,8 +913,12 @@ footer {
         <label for="f-message"><span data-cs>zpráva</span><span data-en>message</span></label>
         <textarea id="f-message" name="message" required></textarea>
       </div>
+      <div class="hp-field" aria-hidden="true">
+        <label for="f-company">company</label>
+        <input type="text" id="f-company" name="company" tabindex="-1" autocomplete="off">
+      </div>
       <button type="submit" class="form-submit"><span data-cs>odeslat</span><span data-en>send</span></button>
-      <div class="form-note" id="form-status"></div>
+      <div class="form-note" id="form-status" aria-live="polite"></div>
     </form>
   </div>
 </section>
@@ -1271,7 +1272,7 @@ function buildGallery() {
     card.setAttribute('aria-label', name);
     card.innerHTML = `<div class="g-thumb">${t.thumb ? `<img src="${t.thumb}" alt="${name}" loading="lazy">` : '<div class="g-dots"></div>'}<div class="g-overlay"><div class="play-btn">▶</div></div></div><div class="g-meta"><div class="g-name">${name}</div><div class="g-info">${type}</div></div>`;
     card.addEventListener('click', () => launchTour(url, name));
-    card.addEventListener('keydown', e => { if (e.key === 'Enter') launchTour(url, name); });
+    card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); launchTour(url, name); } });
     grid.appendChild(card);
   });
   syncGalleryMode();
@@ -1365,6 +1366,8 @@ function setLang(lang) {
   document.documentElement.lang = lang;
   document.getElementById('btn-cs').classList.toggle('active', lang === 'cs');
   document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+  document.getElementById('btn-cs').setAttribute('aria-pressed', lang === 'cs');
+  document.getElementById('btn-en').setAttribute('aria-pressed', lang === 'en');
   document.querySelectorAll('#f-subject option').forEach(o => {
     const t = o.getAttribute(lang === 'en' ? 'data-len' : 'data-lcs');
     if (t) o.textContent = t;
@@ -1435,6 +1438,12 @@ async function handleSubmit(e) {
   const lang = document.body.classList.contains('lang-en') ? 'en' : 'cs';
   const status = document.getElementById('form-status');
   const btn = f.querySelector('.form-submit');
+  // honeypot — ak je vyplnené, je to bot: predstieraj úspech, nič neodosielaj
+  if (f.company && f.company.value) {
+    status.textContent = lang === 'en' ? 'message sent ✓' : 'zpráva odeslána ✓';
+    f.reset();
+    return;
+  }
   btn.disabled = true;
   status.textContent = lang === 'en' ? 'sending…' : 'odesílám…';
   try {
@@ -1445,7 +1454,8 @@ async function handleSubmit(e) {
         name: f.name.value,
         email: f.email.value,
         subject: f.subject.value,
-        message: f.message.value
+        message: f.message.value,
+        company: f.company ? f.company.value : ''
       })
     });
     if (res.ok) {
