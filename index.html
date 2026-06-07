@@ -329,21 +329,21 @@ color: var(--paper);
 
 .hero-sub {
   font-size: 16px;
+  font-weight: 500;
   line-height: 1.75;
-  color: var(--mid);
+  color: var(--red);
   max-width: 48ch;
   margin-bottom: 40px;
 }
 
 .hero-actions { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
-
 .btn {
   font-family: var(--mono);
   font-size: 11px;
   letter-spacing: 0.24em;
   text-transform: lowercase;
-  border: 1px solid var(--ink);
-  background: var(--ink);
+  border: 1px solid var(--red);
+  background: var(--red);
   color: var(--paper);
   padding: 14px 26px;             /* väčší touch target */
   cursor: pointer;
@@ -352,16 +352,17 @@ color: var(--paper);
   display: inline-block;
   min-height: 44px;
 }
-.btn:hover { background: transparent; color: var(--ink); }
+.btn:hover { background: transparent; color: var(--red); }
 
 .btn-ghost {
   font-family: var(--mono);
   font-size: 11px;
+  font-weight: 600;
   letter-spacing: 0.24em;
   text-transform: lowercase;
   background: transparent;
   border: none;
-  color: var(--mid);
+  color: var(--ink);
   cursor: pointer;
   text-decoration: none;
   transition: color 0.15s;
@@ -693,12 +694,12 @@ footer {
   <div class="hero-content">
     <div>
       <h1 class="hero-h1" id="hero-heading">
-        <span data-cs>zaznamenáváme<br><em>prostor.</em></span>
-        <span data-en>we record<br><em>space.</em></span>
+        <span data-cs>záznam<br>prostoru</span>
+        <span data-en>recording<br>space</span>
       </h1>
       <p class="hero-sub">
-        <span data-cs>studio pro fotorealistické 3D prohlídky. zachycujeme vaše prostory v gaussian splatting a doručujeme je na vlastní URL — pro klienta, jednoduše, v každém prohlížeči.</span>
-        <span data-en>studio for photorealistic 3D tours. we capture your spaces in gaussian splatting and deliver them on a custom URL — for your client, in any browser, no install required.</span>
+        <span data-cs>zachycujeme prostory v nejmodernější 3D technologii gaussian splatting. doručujeme na vlastní URL — v každém prohlížeči, na každém zařízení, nebo jako offline aplikaci.</span>
+        <span data-en>we capture spaces using gaussian splatting — the most advanced 3D technology available. delivered on a custom URL — in any browser, on any device, or as an offline app.</span>
       </p>
       <div class="hero-actions">
         <a href="#gallery" class="btn"><span data-cs>naše prohlídky</span><span data-en>our tours</span></a>
