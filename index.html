@@ -403,10 +403,59 @@ color: var(--paper);
 }
 
 .gallery-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
   gap: 6px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 4px;
 }
+.gallery-grid::-webkit-scrollbar { display: none; }
+.gallery-grid .g-card { flex: 0 0 420px; scroll-snap-align: start; }
+
+/* ── slider ovládanie + archiv prepínač ── */
+.gallery-controls { display: flex; align-items: center; gap: 8px; }
+.gallery-arrow {
+  width: 38px; height: 38px;
+  border: 1px solid var(--light);
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 15px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color 0.15s;
+}
+.gallery-arrow:hover { border-color: var(--ink); }
+.gallery-archive-btn {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: lowercase;
+  background: transparent;
+  border: none;
+  color: var(--mid);
+  cursor: pointer;
+  padding: 8px 4px;
+  margin-left: 6px;
+  transition: color 0.15s;
+}
+.gallery-archive-btn:hover { color: var(--ink); }
+
+/* ── archiv: grid namiesto slidera, menšie karty, šípky skryté ── */
+#gallery.archive-mode .gallery-arrow { display: none; }
+#gallery.archive-mode .gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  overflow-x: visible;
+  scroll-snap-type: none;
+}
+@media (max-width: 1200px) { #gallery.archive-mode .gallery-grid { grid-template-columns: repeat(5, 1fr); } }
+@media (max-width: 1000px) { #gallery.archive-mode .gallery-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 760px)  { #gallery.archive-mode .gallery-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 560px)  { #gallery.archive-mode .gallery-grid { grid-template-columns: repeat(2, 1fr); } }
 
 .g-card {
   background: var(--cloud);
@@ -616,7 +665,6 @@ footer {
   .nav-links { display: none; }
   .hamburger { display: flex; }
 
-  .gallery-grid { grid-template-columns: repeat(2, 1fr); }
   .process-grid { grid-template-columns: 1fr; }
   #about > .about-inner    { grid-template-columns: 1fr; gap: 36px; }
   #contact > .contact-inner { grid-template-columns: 1fr; gap: 44px; }
@@ -629,7 +677,7 @@ footer {
   :root { --section-pad-y: 56px; --pad-x: 20px; --nav-h: 80px; }
   .nav { padding: 0 var(--pad-x-mob); }
   .nav-logo { height: 40px; margin-left: 7px; }
-  .gallery-grid { grid-template-columns: 1fr; }
+  .gallery-grid .g-card { flex: 0 0 calc(100vw - 40px); }
   .gallery-header { flex-direction: column; align-items: flex-start; gap: 8px; }
   .form-row { grid-template-columns: 1fr; }
   .channel { flex-direction: column; gap: 4px; }
@@ -726,6 +774,11 @@ footer {
       <div>
         <div class="section-label"><span data-cs>prohlídky</span><span data-en>gallery</span></div>
         <h2 class="section-title" id="gallery-heading"><span data-cs>naše prohlídky</span><span data-en>our recent work</span></h2>
+      </div>
+      <div class="gallery-controls">
+        <button class="gallery-arrow" id="gal-prev" type="button" aria-label="předchozí">←</button>
+        <button class="gallery-arrow" id="gal-next" type="button" aria-label="další">→</button>
+        <button class="gallery-archive-btn" id="gal-archive" type="button">archiv</button>
       </div>
     </div>
     <div class="gallery-grid" id="gallery-grid"></div>
@@ -1208,7 +1261,7 @@ document.querySelectorAll('[data-divider]').forEach(div => {
 // GALLERY DATA
 // ════════════════════════════════════════════════════════════
 const TOURS = [
-  { slug: 'testing-x01', name_cs: 'testovací scéna', name_en: 'test scene', type_cs: 'demo · 2025', type_en: 'demo · 2025' },
+  { slug: 'testing-x01', thumb: 'thumbs/testing-x01.jpg', name_cs: 'testovací scéna', name_en: 'test scene', type_cs: 'demo · 2025', type_en: 'demo · 2025' },
 ];
 const BASE_URL = 'https://{slug}.flyingcat.services';
 
@@ -1225,12 +1278,34 @@ function buildGallery() {
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', '0');
     card.setAttribute('aria-label', name);
-    card.innerHTML = `<div class="g-thumb"><div class="g-dots"></div><div class="g-overlay"><div class="play-btn">▶</div></div></div><div class="g-meta"><div class="g-name">${name}</div><div class="g-info">${type}</div></div>`;
+    card.innerHTML = `<div class="g-thumb">${t.thumb ? `<img src="${t.thumb}" alt="${name}" loading="lazy">` : '<div class="g-dots"></div>'}<div class="g-overlay"><div class="play-btn">▶</div></div></div><div class="g-meta"><div class="g-name">${name}</div><div class="g-info">${type}</div></div>`;
     card.addEventListener('click', () => launchTour(url, name));
     card.addEventListener('keydown', e => { if (e.key === 'Enter') launchTour(url, name); });
     grid.appendChild(card);
   });
+  syncGalleryMode();
 }
+
+// ── Gallery: slider šípky + archiv prepínač (dve zobrazenia tej istej sekcie) ──
+let galleryArchive = false;
+function syncGalleryMode() {
+  const lang = document.body.classList.contains('lang-en') ? 'en' : 'cs';
+  document.getElementById('gallery').classList.toggle('archive-mode', galleryArchive);
+  const btn = document.getElementById('gal-archive');
+  if (galleryArchive) btn.textContent = lang === 'en' ? '← back'   : '← zpět';
+  else                btn.textContent = lang === 'en' ? 'archive'  : 'archiv';
+}
+document.getElementById('gal-archive').addEventListener('click', () => {
+  galleryArchive = !galleryArchive;
+  if (!galleryArchive) document.getElementById('gallery-grid').scrollLeft = 0;
+  syncGalleryMode();
+});
+document.getElementById('gal-prev').addEventListener('click', () => {
+  document.getElementById('gallery-grid').scrollBy({ left: -426, behavior: 'smooth' });
+});
+document.getElementById('gal-next').addEventListener('click', () => {
+  document.getElementById('gallery-grid').scrollBy({ left: 426, behavior: 'smooth' });
+});
 
 // ════════════════════════════════════════════════════════════
 // LAUNCH SEKVENCIA  (in-place v #home, žiadny modal)
