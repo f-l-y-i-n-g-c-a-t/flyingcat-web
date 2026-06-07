@@ -903,13 +903,14 @@ footer {
       <div class="field">
         <label for="f-subject"><span data-cs>typ projektu</span><span data-en>project type</span></label>
         <select id="f-subject" name="subject">
-          <option value="" disabled selected data-cs="—" data-en="—">—</option>
-          <option value="umeni" data-cs="umění" data-en="art">umění</option>
-          <option value="auta" data-cs="auta" data-en="automotive">auta</option>
-          <option value="komercni" data-cs="komerční" data-en="commercial">komerční</option>
-          <option value="stavba" data-cs="stavbaři" data-en="construction">stavbaři</option>
-          <option value="film" data-cs="filmaři" data-en="filmmakers">filmaři</option>
-          <option value="jine" data-cs="jiné" data-en="other">jiné</option>
+          <option value="" disabled selected data-lcs="—" data-len="—">—</option>
+          <option value="umeni" data-lcs="umění" data-len="art">umění</option>
+          <option value="auta" data-lcs="auta" data-len="automotive">auta</option>
+          <option value="komercni" data-lcs="komerční" data-len="commercial">komerční</option>
+          <option value="stavba" data-lcs="stavbaři" data-len="construction">stavbaři</option>
+          <option value="film" data-lcs="filmaři" data-len="filmmakers">filmaři</option>
+          <option value="jine" data-lcs="jiné" data-len="other">jiné</option>
+        </select>
       </div>
       <div class="field">
         <label for="f-message"><span data-cs>zpráva</span><span data-en>message</span></label>
@@ -1364,6 +1365,10 @@ function setLang(lang) {
   document.documentElement.lang = lang;
   document.getElementById('btn-cs').classList.toggle('active', lang === 'cs');
   document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+  document.querySelectorAll('#f-subject option').forEach(o => {
+    const t = o.getAttribute(lang === 'en' ? 'data-len' : 'data-lcs');
+    if (t) o.textContent = t;
+  });
   try { localStorage.setItem('fc-lang', lang); } catch (e) {}
   buildGallery();
 }
