@@ -764,7 +764,6 @@ footer {
     <div class="tour-bar">
       <div class="tour-title" id="tour-title">—</div>
       <div class="tour-actions">
-        <button class="tour-btn" id="tour-fs" type="button"><span data-cs>celá obrazovka</span><span data-en>fullscreen</span></button>
         <button class="tour-btn close" id="tour-close" type="button" aria-label="zavřít prohlídku">✕</button>
       </div>
     </div>
@@ -1356,14 +1355,13 @@ function closeTour() {
   }, 560);
 }
 
-function openTourFullscreen() {
-  const iframe = document.querySelector('#tour-iframe-wrap iframe');
-  if (iframe && iframe.requestFullscreen) iframe.requestFullscreen();
-  else if (currentUrl) window.open(currentUrl, '_blank');
-}
-
 document.getElementById('tour-close').addEventListener('click', closeTour);
-document.getElementById('tour-fs').addEventListener('click', openTourFullscreen);
+// klik na logo (v nav aj footer) zavrie prehliadku ak je otvorená
+document.querySelectorAll('.nav-logo, .footer-logo').forEach(el => {
+  el.addEventListener('click', () => {
+    if (document.getElementById('tour-stage').classList.contains('open')) closeTour();
+  });
+});
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && document.getElementById('tour-stage').classList.contains('open')) closeTour();
 });
