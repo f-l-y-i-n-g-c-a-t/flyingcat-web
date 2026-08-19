@@ -286,6 +286,19 @@ body {
   flex-direction: column;
 }
 .tour-stage.open { opacity: 1; visibility: visible; pointer-events: auto; }
+/* MOBILE ONLY. The stage is absolute inside the hero, so on a phone the iframe
+   got the hero's height (much shorter than the screen) and the tour UI collided
+   / got cut off. Desktop is untouched. dvh follows the Safari bar. */
+@media (max-width: 900px) {
+  .tour-stage.open {
+    position: fixed;
+    inset: 0;
+    height: 100vh;      /* fallback */
+    height: 100dvh;     /* real usable height on mobile */
+    z-index: 9999;
+  }
+  html.tour-open, body.tour-open { overflow: hidden; }   /* no page scroll behind */
+}
 .tour-bar {
   display: flex; align-items: center; justify-content: space-between;
   padding: 14px 20px;
@@ -1340,6 +1353,8 @@ function launchTour(url, name) {
 function revealTour() {
   document.getElementById('tour-stage').classList.add('open');
   document.getElementById('tour-stage').setAttribute('aria-hidden', 'false');
+  document.documentElement.classList.add('tour-open');
+  document.body.classList.add('tour-open');
 }
 
 function closeTour() {
@@ -1347,6 +1362,8 @@ function closeTour() {
   const stage = document.getElementById('tour-stage');
   stage.classList.remove('open');
   stage.setAttribute('aria-hidden', 'true');
+  document.documentElement.classList.remove('tour-open');
+  document.body.classList.remove('tour-open');
   // počkaj kým doblikne, potom uprac iframe a vráť hero
   setTimeout(() => {
     document.getElementById('tour-iframe-wrap').innerHTML = '';
