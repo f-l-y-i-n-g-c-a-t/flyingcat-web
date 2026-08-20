@@ -331,6 +331,13 @@ color: var(--paper);
   position: absolute; inset: 0; width: 100%; height: 100%;
   border: 0; display: block;
 }
+/* MOBILE: render the tour at a desktop-like virtual width and scale it down —
+   the same thing Safari does on the direct link. Without this the iframe gets
+   the real ~390px, the tour UI switches to its huge mobile sizing and breaks.
+   JS (fitTourFrame) sets width/height/transform; CSS just anchors the origin. */
+@media (max-width: 900px) {
+  .tour-iframe-wrap iframe { inset: auto; top: 0; left: 0; transform-origin: 0 0; }
+}
 @media (max-width: 600px) {
   .tour-bar { padding: 10px 14px; }
   .tour-btn { padding: 6px 10px; font-size: 9px; }
@@ -1355,7 +1362,28 @@ function revealTour() {
   document.getElementById('tour-stage').setAttribute('aria-hidden', 'false');
   document.documentElement.classList.add('tour-open');
   document.body.classList.add('tour-open');
+  requestAnimationFrame(fitTourFrame);
 }
+
+/* Mobile: draw the tour at a desktop-like virtual width, scaled down to fit —
+   mirrors what Safari does on the direct link, so the tour UI looks identical
+   in the gallery window, just shifted below the bar. Desktop: no-op. */
+const TOUR_VIRTUAL_W = 980;
+function fitTourFrame() {
+  const frame = document.querySelector('#tour-iframe-wrap iframe');
+  if (!frame) return;
+  const mobile = window.matchMedia('(max-width: 900px)').matches;
+  if (!mobile) { frame.style.width = frame.style.height = frame.style.transform = ''; return; }
+  const wrap = document.getElementById('tour-iframe-wrap');
+  const w = wrap.clientWidth, h = wrap.clientHeight;
+  if (!w || !h) return;
+  const s = w / TOUR_VIRTUAL_W;
+  frame.style.width = TOUR_VIRTUAL_W + 'px';
+  frame.style.height = Math.round(h / s) + 'px';
+  frame.style.transform = 'scale(' + s + ')';
+}
+window.addEventListener('resize', fitTourFrame);
+if (window.visualViewport) window.visualViewport.addEventListener('resize', fitTourFrame);
 
 function closeTour() {
   clearTimeout(launchTimer);
