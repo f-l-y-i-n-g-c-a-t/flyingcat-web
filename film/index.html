@@ -68,16 +68,8 @@
   /* ---------------- video ---------------- */
   main { max-width: 1280px; margin: 0 auto; padding: clamp(20px, 4vw, 48px) clamp(16px, 4vw, 40px) 80px; }
 
-  .frame {
-    position: relative;
-    aspect-ratio: 1 / 1;
-    max-width: min(760px, 100%, calc(100vh - 140px));
-    margin: 0;
-    background: #16181b;
-    border: 1px solid var(--line);
-    overflow: hidden;
-  }
-  .frame video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; background: #000; }
+  .frame { position: relative; width: 100%; background: #000; }
+  .frame video { display: block; width: 100%; height: auto; background: #000; }
 
 
   /* ---------------- copy ---------------- */
@@ -146,7 +138,7 @@
 <main>
   <div class="frame">
     <!-- VIDEO: nahrát na R2 → cdn.flyingcat.services/film/CharlesBridgePrague_SQ.mp4 (H.264, faststart) + poster .png -->
-    <video controls playsinline preload="metadata"
+    <video controls playsinline preload="auto"
            poster="https://cdn.flyingcat.services/film/CharlesBridgePrague_SQ.png">
       <source src="https://cdn.flyingcat.services/film/CharlesBridgePrague_SQ.mp4" type="video/mp4">
     </video>
