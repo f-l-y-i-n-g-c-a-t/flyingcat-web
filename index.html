@@ -177,6 +177,27 @@ body {
 }
 .lang-btn.active { background: var(--ink); color: var(--paper); }
 
+/* FILM — schválně mimo design: černý blok, velká písmena */
+.film-btn {
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  padding: 9px 10px 9px 14px;   /* kompenzace letter-spacingu vpravo */
+  background: var(--ink);
+  color: var(--paper);
+  text-decoration: none;
+  line-height: 1;
+  transition: background 0.15s;
+}
+.film-btn:hover { background: var(--red); }
+@media (max-width: 600px) {
+  .film-btn { font-size: 11px; letter-spacing: 0.18em; padding: 6px 5px 6px 7px; }
+  .nav-right { gap: 6px; }
+}
+@media (max-width: 385px) { .nav-right .film-btn { display: none; } }
+.nav-drawer .film-btn { align-self: flex-start; color: var(--paper); text-transform: none; font-size: 15px; letter-spacing: 0.32em; padding: 10px 10px 10px 14px; margin-top: 18px; border: 0; }
+
 .hamburger {
   display: none;
   flex-direction: column;
@@ -740,6 +761,7 @@ footer {
     <li><a href="#contact"><span data-cs>kontakt</span><span data-en>contact</span></a></li>
   </ul>
   <div class="nav-right">
+    <a href="/film" class="film-btn">FILM</a>
     <div class="lang-toggle">
       <button class="lang-btn active" id="btn-cs" onclick="setLang('cs')" aria-pressed="true">CS</button>
       <button class="lang-btn"        id="btn-en" onclick="setLang('en')" aria-pressed="false">EN</button>
@@ -756,7 +778,7 @@ footer {
   <a href="#about"    onclick="closeMenu()"><span data-cs>o nás</span><span data-en>about</span></a>
   <a href="#usecases" onclick="closeMenu()"><span data-cs>využití</span><span data-en>use cases</span></a>
   <a href="#contact"  onclick="closeMenu()"><span data-cs>kontakt</span><span data-en>contact</span></a>
-
+  <a href="/film" class="film-btn">FILM</a>
 </nav>
 
 <!-- ═══ HERO — interactive dot field ═══ -->
