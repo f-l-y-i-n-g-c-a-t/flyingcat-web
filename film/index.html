@@ -42,7 +42,6 @@
     display: flex; align-items: center; justify-content: space-between;
     padding: 18px clamp(16px, 4vw, 40px);
     background: rgba(10,11,13,.72);
-    border-bottom: 1px solid var(--line);
     backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
   }
   .brand { display: flex; align-items: center; gap: 18px; }
@@ -52,28 +51,34 @@
   .bar-right a:hover, .lang:hover { color: var(--ink); }
   .lang { font-size: 12px; color: var(--dim); letter-spacing: .08em; }
 
+  /* ---------------- dot divider (filmová perforace) — stejný raster jako hlavní web, bílé ---------------- */
+  .dot-divider {
+    width: 100%; height: 96px; position: relative; overflow: hidden;
+    touch-action: pan-y; cursor: crosshair; background: var(--bg);
+  }
+  .dot-divider canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; user-select: none; -webkit-user-select: none; }
+  @media (max-width: 760px) { .dot-divider { height: 76px; } }
+  @media (max-width: 600px) {
+    .brand { gap: 12px; }
+    .brand img { height: 34px; }
+    .brand b { font-size: 12px; letter-spacing: .24em; padding: 6px 6px 6px 9px; }
+    .bar-right .back { display: none; }
+  }
+
   /* ---------------- video ---------------- */
   main { max-width: 1280px; margin: 0 auto; padding: clamp(20px, 4vw, 48px) clamp(16px, 4vw, 40px) 80px; }
 
   .frame {
     position: relative;
-    aspect-ratio: 16 / 9;
+    aspect-ratio: 1 / 1;
+    max-width: min(760px, 100%, calc(100vh - 140px));
+    margin: 0;
     background: #16181b;
     border: 1px solid var(--line);
     overflow: hidden;
   }
   .frame video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; background: #000; }
 
-  /* lens-barrel tick ruler under the video */
-  .ruler { position: relative; height: 22px; margin-top: 10px; }
-  .ruler i {
-    position: absolute; top: 0; width: 1px; height: 6px; background: var(--faint);
-  }
-  .ruler i::after {
-    content: attr(data-m); position: absolute; top: 8px; left: 50%;
-    transform: translateX(-50%); font-size: 9px; font-style: normal; color: var(--faint);
-  }
-  .ruler::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1px; background: var(--line); }
 
   /* ---------------- copy ---------------- */
   .copy {
@@ -107,14 +112,13 @@
   .cta:hover { background: var(--ink); color: var(--bg); }
   .cta svg { width: 18px; height: 18px; }
 
-  footer { padding: 28px clamp(16px, 4vw, 40px); border-top: 1px solid var(--line); font-size: 11px; color: var(--faint); letter-spacing: .3em; text-transform: lowercase; }
+  footer { padding: 28px clamp(16px, 4vw, 40px); font-size: 11px; color: var(--faint); letter-spacing: .3em; text-transform: lowercase; }
 
   @media (max-width: 760px) {
     .copy { grid-template-columns: 1fr; }
     .specs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .spec:nth-child(3) { border-left: 0; padding-left: 0; }
     .spec:nth-child(n+3) { border-top: 1px solid var(--line); }
-    .ruler i:nth-child(even)::after { display: none; }
   }
 </style>
 </head>
@@ -134,20 +138,19 @@
 <header>
   <a class="brand" href="/" aria-label="flyingcat"><img src="/logo.png" alt="flyingcat"><b>FILM</b></a>
   <div class="bar-right">
-    <a href="/"><span data-cs>← zpět</span><span data-en>← back</span></a>
+    <a class="back" href="/"><span data-cs>← zpět</span><span data-en>← back</span></a>
     <button class="lang" id="langBtn" type="button">EN</button>
   </div>
 </header>
 
 <main>
   <div class="frame">
-    <!-- VIDEO: nahrát na R2 → cdn.flyingcat.services/film/karluv-most.mp4 (H.264, faststart) + poster .jpg -->
+    <!-- VIDEO: nahrát na R2 → cdn.flyingcat.services/film/CharlesBridgePrague_SQ.mp4 (H.264, faststart) + poster .png -->
     <video controls playsinline preload="metadata"
-           poster="https://cdn.flyingcat.services/film/karluv-most.jpg">
-      <source src="https://cdn.flyingcat.services/film/karluv-most.mp4" type="video/mp4">
+           poster="https://cdn.flyingcat.services/film/CharlesBridgePrague_SQ.png">
+      <source src="https://cdn.flyingcat.services/film/CharlesBridgePrague_SQ.mp4" type="video/mp4">
     </video>
   </div>
-  <div class="ruler" id="ruler" aria-hidden="true"></div>
 
   <section class="copy">
     <div>
@@ -188,19 +191,81 @@
   </div>
 </main>
 
+<div class="dot-divider" aria-hidden="true" data-divider><canvas></canvas></div>
 <footer>flyingcat — praha</footer>
 
 <script>
 (function () {
-  // focus-barrel ruler (same log spacing as the scout UI)
-  var NEAR = 0.3, FAR = 200, LN = Math.log(NEAR), SPAN = Math.log(FAR) - LN;
-  var host = document.getElementById("ruler");
-  [0.3, 0.5, 1, 2, 3, 5, 10, 20, 50, 100, 200].forEach(function (m) {
-    var t = document.createElement("i");
-    t.style.left = ((Math.log(m) - LN) / SPAN * 100) + "%";
-    t.setAttribute("data-m", m === 200 ? "∞" : m);
-    host.appendChild(t);
-  });
+  // dot divider — port z hlavního webu (interactive, single row), barvy invertované
+  function dotCfg() {
+    return window.innerWidth <= 600
+      ? { spacing: 18, dotRadius: 1.1, radiusActive: 3.0, influence: 100, pushStrength: 22, ease: 0.10, easeReturn: 0.04 }
+      : { spacing: 24, dotRadius: 2.2, radiusActive: 5.2, influence: 170, pushStrength: 32, ease: 0.12, easeReturn: 0.04 };
+  }
+  var INK = [107, 107, 107], RED = [184, 49, 44];
+  function lerp(a, b, t) { return a + (b - a) * t; }
+
+  function dotStrip(container) {
+    var canvas = container.querySelector("canvas"), ctx = canvas.getContext("2d");
+    var dots = [], W = 0, H = 0, cfg = dotCfg(), running = false, visible = true;
+    var ptr = { x: -9999, y: -9999, active: false };
+
+    function build() {
+      cfg = dotCfg();
+      var dpr = Math.min(window.devicePixelRatio || 1, 2), r = container.getBoundingClientRect();
+      W = r.width; H = r.height;
+      canvas.width = W * dpr; canvas.height = H * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      var pad = 10, cols = Math.floor((W - pad * 2) / cfg.spacing) + 1;
+      var ox = pad + ((W - pad * 2) - (cols - 1) * cfg.spacing) / 2;
+      dots = [];
+      for (var c = 0; c < cols; c++) { var x = ox + c * cfg.spacing; dots.push({ ox: x, oy: H / 2, x: x, y: H / 2, heat: 0 }); }
+    }
+    function setPtr(cx, cy, active) {
+      var r = container.getBoundingClientRect();
+      ptr.x = cx - r.left; ptr.y = cy - r.top; ptr.active = active; go();
+    }
+    container.addEventListener("mousemove", function (e) { setPtr(e.clientX, e.clientY, ptr.active); });
+    container.addEventListener("mousedown", function (e) { setPtr(e.clientX, e.clientY, true); });
+    window.addEventListener("mouseup", function () { ptr.active = false; });
+    container.addEventListener("mouseleave", function () { ptr.x = -9999; ptr.y = -9999; go(); });
+    container.addEventListener("touchstart", function (e) { var t = e.touches[0]; setPtr(t.clientX, t.clientY, true); }, { passive: true });
+    container.addEventListener("touchmove", function (e) { var t = e.touches[0]; setPtr(t.clientX, t.clientY, true); }, { passive: true });
+    container.addEventListener("touchend", function () { ptr.active = false; ptr.x = -9999; ptr.y = -9999; go(); });
+
+    function go() { if (!running) { running = true; requestAnimationFrame(frame); } }
+    function frame() {
+      ctx.clearRect(0, 0, W, H);
+      if (!visible) { running = false; return; }
+      var inf2 = cfg.influence * cfg.influence, moving = false;
+      for (var i = 0; i < dots.length; i++) {
+        var d = dots[i], tx = d.ox, ty = d.oy, th = 0;
+        if (ptr.x > -9000) {
+          var dx = d.ox - ptr.x, dy = d.oy - ptr.y, dist2 = dx * dx + dy * dy;
+          if (dist2 < inf2) {
+            var dist = Math.sqrt(dist2) || 0.0001, tt = 1 - dist / cfg.influence;
+            tt = tt * tt * (3 - 2 * tt);
+            var push = cfg.pushStrength * tt;
+            tx = d.ox + (dx / dist) * push; ty = d.oy + (dy / dist) * push;
+            th = tt * (ptr.active ? 1 : 0.55);
+          }
+        }
+        var e = th < d.heat ? cfg.easeReturn : cfg.ease;
+        d.x = lerp(d.x, tx, e); d.y = lerp(d.y, ty, e); d.heat = lerp(d.heat, th, e);
+        if (Math.abs(d.x - d.ox) > 0.15 || Math.abs(d.y - d.oy) > 0.15 || d.heat > 0.01) moving = true;
+        ctx.beginPath();
+        ctx.fillStyle = "rgb(" + Math.round(lerp(INK[0], RED[0], d.heat)) + "," + Math.round(lerp(INK[1], RED[1], d.heat)) + "," + Math.round(lerp(INK[2], RED[2], d.heat)) + ")";
+        ctx.arc(d.x, d.y, lerp(cfg.dotRadius, cfg.radiusActive, d.heat), 0, Math.PI * 2);
+        ctx.fill();
+      }
+      if (!moving && ptr.x < -9000) { running = false; return; }
+      requestAnimationFrame(frame);
+    }
+    new IntersectionObserver(function (es) { es.forEach(function (en) { visible = en.isIntersecting; if (visible) go(); }); }).observe(container);
+    build(); go();
+    var rt; window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { build(); go(); }, 150); });
+  }
+  document.querySelectorAll("[data-divider]").forEach(dotStrip);
 
   // language toggle
   var root = document.documentElement, btn = document.getElementById("langBtn");
