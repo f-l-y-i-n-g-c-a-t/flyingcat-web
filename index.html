@@ -1,294 +1,1557 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>flyingcat — film</title>
-<meta name="description" content="Karlův most — scouting lokace v reálném čase. Gaussian splatting, Unreal Engine 5.6, Zeiss CP.3 lens files.">
-<link rel="canonical" href="https://flyingcat.services/film">
-<link rel="icon" type="image/png" href="/logo.png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="flyingcat — studio pro gaussian splatting prohlídky">
+<!-- Open Graph / sociální náhled -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="flyingcat — záznam prostoru">
+<meta property="og:description" content="fotorealistické gaussian splatting prohlídky prostoru a objektů. doručené na vlastní URL, v každém prohlížeči.">
+<meta property="og:url" content="https://flyingcat.services">
+<meta property="og:image" content="https://flyingcat.services/logo.png">
+<meta property="og:locale" content="cs_CZ">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="flyingcat — záznam prostoru">
+<meta name="twitter:description" content="fotorealistické gaussian splatting prohlídky prostoru a objektů.">
+<meta name="twitter:image" content="https://flyingcat.services/logo.png">
+<title>flyingcat</title>
+<link rel="icon" type="image/png" href="logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  :root {
-    --bg: #0A0B0D;
-    --ink: #F2F0EC;
-    --dim: rgba(242,240,236,.55);
-    --faint: rgba(242,240,236,.34);
-    --line: rgba(242,240,236,.14);
+/* ═══════════════════════════════════════
+   BRAND TOKENS
+═══════════════════════════════════════ */
+:root {
+  --ink:   #0A0A0A;
+  --paper: #FAFAF7;
+  --blue:  #1A2B6B;
+  --red:   #B8312C;
+  --mid:   #6B6B6B;
+  --light: #C8C8C4;
+  --cloud: #F0F0EC;
+  --mono:  'JetBrains Mono', monospace;
+
+  /* MAX-WIDTH KONTAJNER PRE 4K */
+  --max-w: 1440px;
+
+  --pad-x: 40px;
+  --pad-x-mob: 20px;
+  --nav-h: 140px;
+  --section-pad-y: 88px;     /* väčší spacing medzi sekciami */
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+::selection { background: var(--red); color: var(--paper); }
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: var(--nav-h);
+}
+
+body {
+  font-family: var(--mono);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── PRIMITIVES ── */
+.section {
+  padding: var(--section-pad-y) var(--pad-x);
+}
+.section-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+}
+
+.section-label {
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: lowercase;
+  color: var(--mid);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-title {
+  font-size: 28px;                /* zväčšené pre kontrast */
+  font-weight: 500;               /* viac váhy */
+  letter-spacing: 0;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.body-text {
+  font-size: 15px;                /* zväčšené z 14 */
+  line-height: 1.75;
+  color: var(--mid);
+  max-width: 60ch;                /* riadky nie sú nekonečné */
+}
+
+[data-en] { display: none; }
+.lang-en [data-cs] { display: none; }
+.lang-en [data-en] { display: inline; }
+
+/* ═══════════════════════════════════════
+   DOT DIVIDER — interaktívny, rovnaký raster ako hero
+═══════════════════════════════════════ */
+.dot-divider {
+  width: 100%;
+  height: 96px;
+  background: var(--paper);
+  position: relative;
+  overflow: hidden;
+  /* žiadne border-top/bottom — čistá tečková linka */
+  touch-action: pan-y;              /* 50% scrolling: vertikálne posúvanie funguje */
+  cursor: crosshair;
+}
+.dot-divider canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ═══════════════════════════════════════
+   NAV
+═══════════════════════════════════════ */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  height: var(--nav-h);
+  background: var(--paper);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--pad-x);
+  gap: 24px;
+}
+
+.nav-logo { height: 70px; display: block; flex-shrink: 0; }
+.nav-logo img { height: 100%; width: auto; display: block; }
+.nav-links {
+  display: flex;
+  gap: 28px;
+  list-style: none;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.nav-links a {
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: lowercase;
+  color: var(--mid);
+  text-decoration: none;
+  transition: color 0.15s;
+  position: relative;
+  padding: 4px 0;
+}
+.nav-links a:hover { color: var(--ink); }
+.nav-links a.active { color: var(--paper); background: var(--red); padding: 4px 8px; }
+.nav-links a.active::after { display: none; }
+.nav-right { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+
+.lang-toggle { display: flex; border: 1px solid var(--light); }
+.lang-btn {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  background: transparent;
+  border: none;
+  padding: 5px 9px;
+  cursor: pointer;
+  color: var(--mid);
+  transition: background 0.15s, color 0.15s;
+  min-height: 28px;
+}
+.lang-btn.active { background: var(--ink); color: var(--paper); }
+
+/* FILM — schválně mimo design: černý blok, velká písmena */
+.film-btn {
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  padding: 9px 10px 9px 14px;   /* kompenzace letter-spacingu vpravo */
+  background: var(--ink);
+  color: var(--paper);
+  text-decoration: none;
+  line-height: 1;
+  transition: background 0.15s;
+}
+.film-btn:hover { background: var(--red); }
+@media (max-width: 600px) {
+  .film-btn { font-size: 11px; letter-spacing: 0.18em; padding: 6px 5px 6px 7px; }
+  .nav-right { gap: 6px; }
+}
+@media (max-width: 385px) { .nav-right .film-btn { display: none; } }
+.nav-drawer .film-btn { align-self: flex-start; color: var(--paper); text-transform: none; font-size: 15px; letter-spacing: 0.32em; padding: 10px 10px 10px 14px; margin-top: 18px; border: 0; }
+
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 10px 8px;              /* väčší touch target */
+}
+.hamburger span { display: block; width: 22px; height: 1px; background: var(--ink); transition: transform 0.2s, opacity 0.2s; }
+.hamburger.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.hamburger.open span:nth-child(2) { opacity: 0; }
+.hamburger.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+.nav-drawer {
+  display: none;
+  position: fixed;
+  top: var(--nav-h);
+  left: 0; right: 0;
+  background: var(--paper);
+  border-bottom: 1px solid var(--light);
+  z-index: 199;
+  padding: 24px var(--pad-x-mob);
+  flex-direction: column;
+  gap: 14px;
+}
+.nav-drawer.open { display: flex; }
+.nav-drawer a {
+  transition: background 0.15s, color 0.15s;
+  font-size: 14px;
+  letter-spacing: 0.28em;
+  text-transform: lowercase;
+  color: var(--ink);
+  text-decoration: none;
+  padding: 14px 0;                /* väčší touch target */
+  border-bottom: 1px solid var(--light);
+}
+
+/* ═══════════════════════════════════════
+   HERO — interaktívne dot pole ako pozadie
+═══════════════════════════════════════ */
+#home {
+  position: relative;
+  width: 100%;
+  min-height: calc(100vh - var(--nav-h));
+  min-height: calc(100dvh - var(--nav-h));
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  touch-action: pan-y;            /* vertikálny scroll funguje, horizontálny ťah = interakcia */
+  cursor: crosshair;
+}
+#home.launching { cursor: default; }
+
+#dotcanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: 0;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  padding: var(--section-pad-y) var(--pad-x);
+  max-width: var(--max-w);
+  width: 100%;
+  margin: 0 auto;
+  pointer-events: none;           /* prsť prechádza na canvas */
+}
+.hero-content > div {
+  max-width: 720px;
+}
+.hero-content a,
+.hero-content button { pointer-events: auto; }
+
+/* text "zatahne sa" doľava pri spustení prohliadky */
+.hero-content {
+  transition: opacity 0.7s cubic-bezier(0.6,0,0.3,1),
+              transform 0.85s cubic-bezier(0.6,0,0.3,1),
+              filter   0.7s cubic-bezier(0.6,0,0.3,1);
+  transform-origin: 0% 50%;
+  will-change: opacity, transform, filter;
+}
+.hero-content.away {
+  opacity: 0;
+  transform: translateX(-120px) scale(0.86);
+  filter: blur(3px);
+}
+.hero-content.away a,
+.hero-content.away button { pointer-events: none; }
+
+/* ─── TOUR STAGE — prohlídka beží priamo v #home, namiesto modalu ─── */
+.tour-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  background: var(--paper);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.55s cubic-bezier(0.16,1,0.3,1),
+              visibility 0.55s linear;
+  display: flex;
+  flex-direction: column;
+}
+.tour-stage.open { opacity: 1; visibility: visible; pointer-events: auto; }
+/* MOBILE ONLY. The stage is absolute inside the hero, so on a phone the iframe
+   got the hero's height (much shorter than the screen) and the tour UI collided
+   / got cut off. Desktop is untouched. dvh follows the Safari bar. */
+@media (max-width: 900px) {
+  .tour-stage.open {
+    position: fixed;
+    inset: 0;
+    height: 100vh;      /* fallback */
+    height: 100dvh;     /* real usable height on mobile */
+    z-index: 9999;
   }
+  html.tour-open, body.tour-open { overflow: hidden; }   /* no page scroll behind */
+}
+.tour-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--light);
+  background: var(--paper);
+  flex-shrink: 0;
+  gap: 12px;
+}
+.tour-title {
+  font-size: 11px; letter-spacing: 0.28em; text-transform: lowercase;
+  color: var(--mid); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.tour-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.tour-btn {
+  background: transparent; border: 1px solid var(--light); color: var(--ink);
+  padding: 8px 14px; font-family: var(--mono);
+  font-size: 10px; letter-spacing: 0.22em; text-transform: lowercase;
+  cursor: pointer; transition: border-color 0.15s, color 0.15s;
+}
+.tour-btn:hover { border-color: var(--ink); }
+.tour-btn.close {
+  width: 38px; height: 38px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 14px; letter-spacing: 0;background: var(--red);
+border-color: var(--red);
+color: var(--paper);
+}
+.tour-iframe-wrap { flex: 1; position: relative; background: var(--ink); min-height: 0; }
+.tour-iframe-wrap iframe {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  border: 0; display: block;
+}
+/* MOBILE: render the tour at a desktop-like virtual width and scale it down —
+   the same thing Safari does on the direct link. Without this the iframe gets
+   the real ~390px, the tour UI switches to its huge mobile sizing and breaks.
+   JS (fitTourFrame) sets width/height/transform; CSS just anchors the origin. */
+@media (max-width: 900px) {
+  .tour-iframe-wrap iframe { inset: auto; top: 0; left: 0; transform-origin: 0 0; }
+}
+@media (max-width: 600px) {
+  .tour-bar { padding: 10px 14px; }
+  .tour-btn { padding: 6px 10px; font-size: 9px; }
+  .tour-btn.close { width: 34px; height: 34px; }
+}
 
-  html { background: var(--bg); }
-  body {
-    background: var(--bg);
-    color: var(--ink);
-    font: 400 14px/1.7 "JetBrains Mono", monospace;
-    -webkit-font-smoothing: antialiased;
-  }
-  a { color: inherit; text-decoration: none; }
-  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
-  :focus-visible { outline: 1px solid var(--ink); outline-offset: 3px; }
-  .num { font-variant-numeric: tabular-nums; }
+/* Hero H1 — DRAMATICKY VÄČŠÍ */
+.hero-h1 {
+  font-size: clamp(40px, 7vw, 88px);
+  font-weight: 500;               /* viac váhy */
+  letter-spacing: 0.06em;         /* zmenšené */
+  text-transform: lowercase;
+  line-height: 1.05;              /* tesnejší riadkový riadok */
+  color: var(--ink);
+  margin-bottom: 24px;
+}
 
-  /* language: <html data-lang="cs|en"> */
-  html[data-lang="cs"] [data-en], html[data-lang="en"] [data-cs] { display: none; }
+.hero-sub {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.75;
+  color: var(--ink);
+  max-width: 48ch;
+  margin-bottom: 40px;
+  display: inline-block;
+  padding: 10px 14px;
+  margin-left: -14px;
+  background: rgba(250, 250, 247, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  text-shadow: 0 0 2px var(--paper), 0 0 2px var(--paper), 0 0 4px var(--paper);
+}
 
-  /* ---------------- top bar ---------------- */
-  header {
-    position: sticky; top: 0; z-index: 5;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 18px clamp(16px, 4vw, 40px);
-    background: rgba(10,11,13,.72);
-    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-  }
-  .brand { display: flex; align-items: center; gap: 18px; }
-  .brand img { height: 44px; width: auto; display: block; filter: invert(1); }
-  .brand b { font-weight: 600; font-size: 15px; letter-spacing: .32em; padding: 8px 9px 8px 13px; background: var(--ink); color: var(--bg); line-height: 1; }
-  .bar-right { display: flex; gap: 22px; align-items: center; font-size: 12px; color: var(--dim); }
-  .bar-right a:hover, .lang:hover { color: var(--ink); }
-  .lang { font-size: 12px; color: var(--dim); letter-spacing: .08em; }
+.hero-actions { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+.btn {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: lowercase;
+  border: 1px solid var(--red);
+  background: var(--red);
+  color: var(--paper);
+  padding: 14px 26px;             /* väčší touch target */
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  text-decoration: none;
+  display: inline-block;
+  min-height: 44px;
+}
+.btn:hover { background: transparent; color: var(--red); }
 
-  /* ---------------- dot divider (filmová perforace) — stejný raster jako hlavní web, bílé ---------------- */
-  .dot-divider {
-    width: 100%; height: 96px; position: relative; overflow: hidden;
-    touch-action: pan-y; cursor: crosshair; background: var(--bg);
-  }
-  .dot-divider canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; user-select: none; -webkit-user-select: none; }
-  @media (max-width: 760px) { .dot-divider { height: 76px; } }
-  @media (max-width: 600px) {
-    .brand { gap: 12px; }
-    .brand img { height: 34px; }
-    .brand b { font-size: 12px; letter-spacing: .24em; padding: 6px 6px 6px 9px; }
-    .bar-right .back { display: none; }
-  }
+.btn-ghost {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: lowercase;
+  background: rgba(250, 250, 247, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: none;
+  color: var(--ink);
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.15s;
+  padding: 14px 16px;
+  text-shadow: 0 0 2px var(--paper), 0 0 2px var(--paper), 0 0 4px var(--paper);
+}
+.btn-ghost:hover { color: var(--ink); }
 
-  /* ---------------- video ---------------- */
-  main { max-width: 1280px; margin: 0 auto; padding: clamp(20px, 4vw, 48px) clamp(16px, 4vw, 40px) 80px; }
+/* ═══════════════════════════════════════
+   GALLERY
+═══════════════════════════════════════ */
+#gallery {
+  padding: var(--section-pad-y) var(--pad-x);
+}
+#gallery > .gallery-inner { max-width: var(--max-w); margin: 0 auto; }
 
-  .frame { position: relative; width: 100%; background: #000; }
-  .frame video { display: block; width: 100%; height: auto; background: #000; }
+.gallery-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 32px;
+}
+
+.gallery-grid {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+}
+.gallery-grid::-webkit-scrollbar { display: none; }
+.gallery-grid .g-card { flex: 0 0 420px; scroll-snap-align: start; }
+
+/* ── slider ovládanie + archiv prepínač ── */
+.gallery-controls { display: flex; align-items: center; gap: 8px; }
+.gallery-arrow {
+  width: 38px; height: 38px;
+  border: 1px solid var(--light);
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 15px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color 0.15s;
+}
+.gallery-arrow:hover { border-color: var(--ink); }
+.gallery-archive-btn {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: lowercase;
+  background: transparent;
+  border: none;
+  color: var(--mid);
+  cursor: pointer;
+  padding: 8px 4px;
+  margin-left: 6px;
+  transition: color 0.15s;
+}
+.gallery-archive-btn:hover { color: var(--ink); }
+
+/* ── archiv: grid namiesto slidera, menšie karty, šípky skryté ── */
+#gallery.archive-mode .gallery-arrow { display: none; }
+#gallery.archive-mode .gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  overflow-x: visible;
+  scroll-snap-type: none;
+}
+@media (max-width: 1200px) { #gallery.archive-mode .gallery-grid { grid-template-columns: repeat(5, 1fr); } }
+@media (max-width: 1000px) { #gallery.archive-mode .gallery-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 760px)  { #gallery.archive-mode .gallery-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 560px)  { #gallery.archive-mode .gallery-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.g-card {
+  background: var(--cloud);
+  border: 1px solid var(--light);
+  cursor: pointer;
+  transition: border-color 0.15s;
+  overflow: hidden;
+}
+.g-card:hover { border-color: var(--ink); }
+.g-card:hover .g-overlay { opacity: 1; }
+.g-card:hover .g-dots { opacity: 0.28; }
+
+.g-thumb { aspect-ratio: 16/10; position: relative; overflow: hidden; background: var(--cloud); }
+.g-dots {
+  position: absolute; inset: 0;
+  background-image: radial-gradient(circle, rgba(10,10,10,0.2) 1px, transparent 1px);
+  background-size: 9px 9px;
+  mask-image: radial-gradient(ellipse at 50% 45%, black 0%, transparent 65%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 45%, black 0%, transparent 65%);
+  opacity: 0.14;
+  transition: opacity 0.2s;
+}
+.g-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.g-overlay {
+  position: absolute; inset: 0;
+  background: rgba(10,10,10,0.55);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.18s;
+}
+.play-btn {
+  width: 44px; height: 44px;
+  border: 1px solid rgba(250,250,247,0.7);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; color: var(--paper);
+}
+.g-meta {
+  padding: 12px 14px;
+  display: flex; justify-content: space-between; align-items: baseline;
+}
+.g-name { font-size: 12px; letter-spacing: 0.04em; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 72%; }
+.g-info { font-size: 10px; letter-spacing: 0.06em; color: var(--mid); }
+
+/* ═══════════════════════════════════════
+   PROCESS
+═══════════════════════════════════════ */
+#process {
+  padding: var(--section-pad-y) var(--pad-x);
+}
+#process > .process-inner { max-width: var(--max-w); margin: 0 auto; }
+
+.process-header { margin-bottom: 40px; }
+
+.process-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+
+.process-step {
+  background: var(--cloud);
+  border: 1px solid var(--light);
+  padding: 30px 24px;
+  position: relative;
+  overflow: hidden;
+}
+.process-step .corner-dots {
+  position: absolute; top: 0; right: 0;
+  width: 60px; height: 60px;
+  background-image: radial-gradient(circle, rgba(10,10,10,0.1) 1px, transparent 1px);
+  background-size: 9px 9px;
+}
+.process-num { font-size: 11px; letter-spacing: 0.3em; text-transform: lowercase; color: var(--red); margin-bottom: 18px; }
+.process-name { font-size: 18px; font-weight: 500; color: var(--ink); margin-bottom: 10px; line-height: 1.3; }
+.process-desc { font-size: 13px; letter-spacing: 0.02em; color: var(--mid); line-height: 1.7; }
+
+/* ═══════════════════════════════════════
+   ABOUT
+═══════════════════════════════════════ */
+#about {
+  padding: var(--section-pad-y) var(--pad-x);
+}
+#about > .about-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 64px;
+}
+.stats { display: flex; flex-direction: column; gap: 24px; }
+.stat { border-top: 1px solid var(--light); padding-top: 12px; }
+.stat-num { font-size: 36px; font-weight: 500; letter-spacing: 0; color: var(--ink); line-height: 1; margin-bottom: 6px; }
+.stat-unit { font-size: 14px; color: var(--mid); }
+.stat-label { font-size: 11px; letter-spacing: 0.05em; color: var(--mid); }
+.about-text .section-title { margin-bottom: 18px; margin-top: 2px; }
+.tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 24px; }
+.tag { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); border: 1px solid var(--light); padding: 5px 10px; }
+
+/* ═══════════════════════════════════════
+   USE CASES
+═══════════════════════════════════════ */
+#usecases {
+  padding: var(--section-pad-y) var(--pad-x);
+}
+#usecases > .uc-inner { max-width: var(--max-w); margin: 0 auto; }
+
+.uc-header { margin-bottom: 36px; }
+.uc-grid { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.uc-item {
+  flex: 0 1 calc(33.333% - 4px);
+  min-width: 0;
+  background: var(--cloud);
+  border: 1px solid var(--light);
+  padding: 26px;
+  transition: border-color 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+.uc-item:hover { border-color: var(--ink); }
+.uc-dot-corner { position: absolute; top: 0; right: 0; width: 48px; height: 48px; background-image: radial-gradient(circle, rgba(10,10,10,0.08) 1px, transparent 1px); background-size: 8px 8px; }
+.uc-num  { font-size: 10px; letter-spacing: 0.28em; text-transform: lowercase; color: var(--red); margin-bottom: 14px; }
+.uc-name { font-size: 15px; font-weight: 500; color: var(--ink); margin-bottom: 10px; line-height: 1.3; }
+.uc-desc { font-size: 13px; letter-spacing: 0.02em; color: var(--mid); line-height: 1.65; }
+
+/* ═══════════════════════════════════════
+   CONTACT
+═══════════════════════════════════════ */
+#contact {
+  padding: var(--section-pad-y) var(--pad-x);
+}
+#contact > .contact-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+}
+.contact-intro .section-title { margin-bottom: 18px; margin-top: 4px; }
+.contact-channels { margin-top: 28px; display: flex; flex-direction: column; gap: 14px; }
+.channel { display: flex; align-items: baseline; gap: 14px; padding: 12px 0; border-top: 1px solid var(--light); }
+.channel-label { font-size: 10px; letter-spacing: 0.28em; text-transform: lowercase; color: var(--mid); min-width: 72px; }
+.channel-value { font-size: 14px; color: var(--ink); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+.channel-value:hover { border-bottom-color: var(--red); }
+
+.form { display: flex; flex-direction: column; gap: 14px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 10px; letter-spacing: 0.28em; text-transform: lowercase; color: var(--mid); }
+.field input, .field textarea, .field select {
+  font-family: var(--mono);
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  background: var(--cloud);
+  border: 1px solid var(--light);
+  color: var(--ink);
+  padding: 12px 14px;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  border-radius: 0;
+}
+.field input:focus, .field textarea:focus, .field select:focus { border-color: var(--blue); }
+.field input:user-invalid, .field textarea:user-invalid { border-color: var(--red); }
+/* honeypot — skryté pole proti spam botom (človek ho nevidí) */
+.hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.field textarea { resize: vertical; min-height: 120px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-submit {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: lowercase;
+  background: var(--ink);
+  color: var(--paper);
+  border: 1px solid var(--ink);
+  padding: 14px 28px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  align-self: flex-start;
+  margin-top: 8px;
+  min-height: 44px;
+}
+.form-submit:hover { background: var(--red); border-color: var(--red); color: var(--paper); }
+.form-note { font-size: 10px; letter-spacing: 0.06em; color: var(--mid); margin-top: 4px; }
 
 
-  /* ---------------- copy ---------------- */
-  .copy {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
-    gap: clamp(24px, 5vw, 72px);
-    margin-top: clamp(40px, 6vw, 72px);
-  }
-  .eyebrow { font-size: 11px; letter-spacing: .3em; text-transform: lowercase; color: var(--dim); margin-bottom: 14px; }
-  h1 { font-size: clamp(24px, 3.4vw, 38px); font-weight: 500; line-height: 1.18; letter-spacing: -.02em; text-transform: lowercase; }
-  h1 span.sub { display: block; color: var(--dim); font-weight: 400; }
-  .text p { margin-bottom: 1.1em; color: rgba(242,240,236,.82); max-width: 62ch; }
-  .text p:first-child { color: var(--ink); font-size: 15px; }
 
-  .specs {
-    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
-    border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
-    margin-top: clamp(40px, 6vw, 64px);
-  }
-  .spec { padding: 18px 16px; border-left: 1px solid var(--line); }
-  .spec:first-child { border-left: 0; padding-left: 0; }
-  .spec strong { display: block; font-size: 24px; font-weight: 500; }
-  .spec span { font-size: 11px; color: var(--dim); }
+/* ═══════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════ */
+footer {
+  padding: 32px var(--pad-x);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  max-width: var(--max-w);
+  margin: 0 auto;
+}
+.footer-logo { height: 60px; display: block; }
+.footer-logo img { height: 100%; width: auto; display: block; }
+.footer-info { display: flex; flex-direction: column; gap: 4px; align-items: center; text-align: center; }
+.footer-url { font-size: 12px; letter-spacing: 0.05em; color: var(--ink); }
+.footer-copy { font-size: 10px; letter-spacing: 0.06em; color: var(--mid); }
+.footer-links { display: flex; gap: 20px; }
+.footer-link { font-size: 10px; letter-spacing: 0.24em; text-transform: lowercase; color: var(--mid); text-decoration: none; transition: color 0.15s; padding: 8px 0; }
+.footer-link:hover { color: var(--red); }
 
-  .cta {
-    display: inline-flex; align-items: center; gap: 12px;
-    margin-top: 8px; padding: 13px 18px;
-    border: 1px solid rgba(242,240,236,.4);
-    font-size: 13px; letter-spacing: .04em;
-  }
-  .cta:hover { background: var(--ink); color: var(--bg); }
-  .cta svg { width: 18px; height: 18px; }
+/* ═══════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════ */
+@media (max-width: 900px) {
+  :root { --section-pad-y: 64px; --pad-x: 24px; }
+  .nav-links { display: none; }
+  .hamburger { display: flex; }
 
-  footer { padding: 28px clamp(16px, 4vw, 40px); font-size: 11px; color: var(--faint); letter-spacing: .3em; text-transform: lowercase; }
+  .process-grid { grid-template-columns: 1fr; }
+  #about > .about-inner    { grid-template-columns: 1fr; gap: 36px; }
+  #contact > .contact-inner { grid-template-columns: 1fr; gap: 44px; }
+  .uc-item { flex-basis: 100%; }
+  footer { flex-direction: column; gap: 20px; align-items: center; }
+  .footer-logo { height: 32px; }
+}
 
-  @media (max-width: 760px) {
-    .copy { grid-template-columns: 1fr; }
-    .specs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .spec:nth-child(3) { border-left: 0; padding-left: 0; }
-    .spec:nth-child(n+3) { border-top: 1px solid var(--line); }
-  }
+@media (max-width: 600px) {
+  :root { --section-pad-y: 56px; --pad-x: 20px; --nav-h: 80px; }
+  .nav { padding: 0 var(--pad-x-mob); }
+  .nav-logo { height: 40px; margin-left: 7px; }
+  .gallery-grid .g-card { flex: 0 0 calc(100vw - 40px); }
+  .gallery-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .form-row { grid-template-columns: 1fr; }
+  .channel { flex-direction: column; gap: 4px; }
+  .channel-label { min-width: 0; }
+
+  /* divider menší na mobile */
+  .dot-divider { height: 76px; }
+}
+
+   #dotcanvas, .dot-divider canvas {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.section-label.active { color: var(--paper); display: inline-flex; }
+.section-label.active span:not(.num) { background: var(--red); padding: 2px 6px; }
+.nav-drawer a.active { color: var(--paper); background: var(--red); }
+
+   
 </style>
 </head>
-<body>
 
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <symbol id="iris" viewBox="0 0 24 24">
-    <circle cx="12" cy="12" r="10.2" fill="none" stroke="currentColor" stroke-width="1.4"/>
-    <circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="1.1" opacity=".55"/>
-    <g stroke="currentColor" stroke-width="1.1" opacity=".55">
-      <path d="M12 2 L12 7"/><path d="M20.6 7 L16.3 9.5"/><path d="M20.6 17 L16.3 14.5"/>
-      <path d="M12 22 L12 17"/><path d="M3.4 17 L7.7 14.5"/><path d="M3.4 7 L7.7 9.5"/>
-    </g>
-  </symbol>
-</svg>
+<body id="body" class="lang-cs">
 
-<header>
-  <a class="brand" href="/" aria-label="flyingcat"><img src="/logo.png" alt="flyingcat"><b>FILM</b></a>
-  <div class="bar-right">
-    <a class="back" href="/"><span data-cs>← zpět</span><span data-en>← back</span></a>
-    <button class="lang" id="langBtn" type="button">EN</button>
+<!-- ═══ NAV ═══ -->
+<nav class="nav" id="nav">
+  <a href="#home" class="nav-logo" aria-label="flyingcat">
+    <img src="logo.png" alt="flyingcat">
+  </a>
+  <ul class="nav-links" id="nav-links">
+    <li><a href="#gallery"><span data-cs>prohlídky</span><span data-en>gallery</span></a></li>
+    <li><a href="#process"><span data-cs>proces</span><span data-en>process</span></a></li>
+    <li><a href="#about"><span data-cs>o nás</span><span data-en>about</span></a></li>
+    <li><a href="#usecases"><span data-cs>využití</span><span data-en>use cases</span></a></li>
+    <li><a href="#contact"><span data-cs>kontakt</span><span data-en>contact</span></a></li>
+  </ul>
+  <div class="nav-right">
+    <a href="/film" class="film-btn">FILM</a>
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="btn-cs" onclick="setLang('cs')" aria-pressed="true">CS</button>
+      <button class="lang-btn"        id="btn-en" onclick="setLang('en')" aria-pressed="false">EN</button>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu" onclick="toggleMenu()">
+      <span></span><span></span><span></span>
+    </button>
   </div>
-</header>
+</nav>
 
-<main>
-  <div class="frame">
-    <!-- VIDEO: HLS (adaptivní kvalita) v R2 film/hls/master.m3u8, mp4 jako záloha -->
-    <video id="film" controls playsinline preload="metadata"
-           poster="https://cdn.flyingcat.services/film/CharlesBridgePrague_SQ.png"></video>
-  </div>
+<nav class="nav-drawer" id="nav-drawer">
+  <a href="#gallery"  onclick="closeMenu()"><span data-cs>prohlídky</span><span data-en>gallery</span></a>
+  <a href="#process"  onclick="closeMenu()"><span data-cs>proces</span><span data-en>process</span></a>
+  <a href="#about"    onclick="closeMenu()"><span data-cs>o nás</span><span data-en>about</span></a>
+  <a href="#usecases" onclick="closeMenu()"><span data-cs>využití</span><span data-en>use cases</span></a>
+  <a href="#contact"  onclick="closeMenu()"><span data-cs>kontakt</span><span data-en>contact</span></a>
+  <a href="/film" class="film-btn">FILM</a>
+</nav>
 
-  <section class="copy">
+<!-- ═══ HERO — interactive dot field ═══ -->
+<section id="home" aria-labelledby="hero-heading">
+  <canvas id="dotcanvas" aria-hidden="true"></canvas>
+  <div class="hero-content">
     <div>
-      <div class="eyebrow">Location scouting · realtime</div>
-      <h1>
-        <span data-cs>Karlův most</span><span data-en>Charles Bridge</span>
-        <span class="sub" data-cs>scouting lokace, aniž byste vstali od stolu</span>
-        <span class="sub" data-en>location scouting, without leaving the room</span>
+      <h1 class="hero-h1" id="hero-heading">
+        <span data-cs>záznam<br>prostoru</span>
+        <span data-en>recording<br>space</span>
       </h1>
-    </div>
-
-    <div class="text">
-      <div data-cs>
-        <p>Celý most, nascanovaný a běžící v reálném čase v Unreal Engine 5.6. Chodíte tím jako ve hře: kamkoli, kdykoli zastavit, vybrat objektiv a hledat záběr.</p>
-        <p>Nasnímáno PortalCamem v 7 skenech po 10–20 minutách, brzy ráno v overcastu kvůli rovnoměrnému světlu. Pak několik dalších návštěv na dofocení soch kvůli detailu. Dohromady 67 milionů gaussianů vykreslených přes XGRIDS LCC plugin. Okolní město je z Cesia, obloha a světlo z Ultra Dynamic Sky.</p>
-        <p>Kamera je skutečná CineCamera s kalibrovanými lens files Zeiss CP.3 (15–135 mm). Rozhraní je naše: objektiv, ostření, vyvážení bílé, rychlost pohybu. Doplnit se dá cokoli dalšího.</p>
-        <p>Běží to streamem v prohlížeči, takže se nic neinstaluje a není potřeba grafika. Streamování něco stojí, proto běží po domluvě. Napište nám a pošleme odkaz.</p>
+      <p class="hero-sub">
+        <span data-cs>zachycujeme prostory v nejmodernější 3D technologii gaussian splatting. doručujeme na vlastní URL — v každém prohlížeči, na každém zařízení, nebo jako offline aplikaci.</span>
+        <span data-en>we capture spaces using gaussian splatting — the most advanced 3D technology available. delivered on a custom URL — in any browser, on any device, or as an offline app.</span>
+      </p>
+      <div class="hero-actions">
+        <a href="#gallery" class="btn"><span data-cs>naše prohlídky</span><span data-en>our tours</span></a>
+        <a href="#process" class="btn-ghost"><span data-cs>↗ jak to funguje</span><span data-en>↗ how it works</span></a>
       </div>
-      <div data-en>
-        <p>The whole bridge, scanned and running in realtime in Unreal Engine 5.6. You walk through it like a game: go anywhere, stop anywhere, pick a lens and frame the shot.</p>
-        <p>Captured with a PortalCam in 7 scans of 10–20 minutes each, early in the morning under overcast skies for even light. Several more visits followed to capture the statues in detail. Together that's 67 million gaussians, rendered through the XGRIDS LCC plugin, with the surrounding city from Cesium and sky and lighting from Ultra Dynamic Sky.</p>
-        <p>The camera is a real CineCamera on calibrated Zeiss CP.3 lens files, from 15 to 135 mm. The interface is ours: lens, focus, white balance, movement speed. Any other control can be added.</p>
-        <p>It streams to the browser, so nothing to install and no GPU needed. Streaming isn't free to keep running, so it's on by appointment. Write us and we'll send you a link.</p>
-      </div>
-
-      <a class="cta" href="/#contact">
-        <svg><use href="#iris"/></svg>
-        <span data-cs>Domluvit vyzkoušení</span><span data-en>Book a session</span>
-      </a>
     </div>
-  </section>
-
-  <div class="specs">
-    <div class="spec"><strong class="num">7</strong><span data-cs>skenů PortalCam</span><span data-en>PortalCam scans</span></div>
-    <div class="spec"><strong class="num">67 M</strong><span>gaussians</span></div>
-    <div class="spec"><strong class="num">15–135</strong><span>mm · Zeiss CP.3</span></div>
-    <div class="spec"><strong class="num">UE 5.6</strong><span>pixel streaming</span></div>
   </div>
-</main>
+  
+  <!-- ═══ TOUR STAGE — prohlídka beží priamo v dotfielde ═══ -->
+  <div class="tour-stage" id="tour-stage" aria-hidden="true">
+    <div class="tour-bar">
+      <div class="tour-title" id="tour-title">—</div>
+      <div class="tour-actions">
+        <button class="tour-btn close" id="tour-close" type="button" aria-label="zavřít prohlídku">✕</button>
+      </div>
+    </div>
+    <div class="tour-iframe-wrap" id="tour-iframe-wrap"></div>
+  </div>
+</section>
 
-<div class="dot-divider" aria-hidden="true" data-divider><canvas></canvas></div>
-<footer>flyingcat — praha</footer>
+<!-- ═══ GALLERY ═══ -->
+<section id="gallery" aria-labelledby="gallery-heading">
+  <div class="gallery-inner">
+    <div class="gallery-header">
+      <div>
+        <div class="section-label"><span data-cs>prohlídky</span><span data-en>gallery</span></div>
+        <h2 class="section-title" id="gallery-heading"><span data-cs>naše prohlídky</span><span data-en>our recent work</span></h2>
+      </div>
+      <div class="gallery-controls">
+        <button class="gallery-arrow" id="gal-prev" type="button" aria-label="předchozí">←</button>
+        <button class="gallery-arrow" id="gal-next" type="button" aria-label="další">→</button>
+        <button class="gallery-archive-btn" id="gal-archive" type="button">archiv</button>
+      </div>
+    </div>
+    <div class="gallery-grid" id="gallery-grid"></div>
+  </div>
+</section>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.15/hls.min.js"></script>
+<!-- ═══ DIVIDER 2 ═══ -->
+<div class="dot-divider" aria-hidden="true" data-divider>
+  <canvas></canvas>
+</div>
+
+<!-- ═══ PROCESS ═══ -->
+<section id="process" aria-labelledby="process-heading">
+  <div class="process-inner">
+    <div class="process-header">
+      <div class="section-label"><span data-cs>proces</span><span data-en>process</span></div>
+      <h2 class="section-title" id="process-heading"><span data-cs>jak vznikne vaše prohlídka</span><span data-en>how your tour is made</span></h2>
+    </div>
+    <div class="process-grid">
+      <div class="process-step">
+        <div class="corner-dots"></div>
+        <div class="process-num">·&nbsp;&nbsp;01</div>
+        <div class="process-name"><span data-cs>zachycení</span><span data-en>capture</span></div>
+        <div class="process-desc"><span data-cs>přijedeme k vám, nebo si objekt půjčíme do ateliéru. nasnímáme ho lidarem a fotografiemi ze všech úhlů — od dvou hodin do jednoho dne.</span><span data-en>we come to you, or borrow the object into our studio. we capture it with lidar and photographs from every angle — from two hours to one day.</span></div>
+      </div>
+      <div class="process-step">
+        <div class="corner-dots"></div>
+        <div class="process-num">·&nbsp;&nbsp;02</div>
+        <div class="process-name"><span data-cs>zpracování</span><span data-en>processing</span></div>
+       <div class="process-desc"><span data-cs>ze získaných dat trénujeme gaussian splatting model — fotorealistická 3D scéna se světlem, hloubkou a materiály. stejnou váhu přikládáme ovládání: od minimálního loading screenu pro produktové „3D foto" po full custom design s přepínáním variant, popisky, teleportem, měřením nebo porovnáním více modelů.</span><span data-en>from captured data we train a gaussian splatting model — a photorealistic 3D scene with light, depth and materials. we put equal weight on the interface: from a minimal loading screen for product "3D photo" to full custom design with variant switching, annotations, teleport, measurement or multi-model comparison.</span></div>
+      </div>
+      <div class="process-step">
+        <div class="corner-dots"></div>
+        <div class="process-num">·&nbsp;&nbsp;03</div>
+        <div class="process-name"><span data-cs>dodání</span><span data-en>delivery</span></div>
+        <div class="process-desc"><span data-cs>prohlídku hostujeme na vlastní URL pod doménou flyingcat.services — sdílejte linkem, vložte na web nebo přiložte k nabídce. žádná instalace pro klienta. na přání dodáme i standalone aplikaci pro PC/Mac nebo nativní gaussian splatting soubor (.ply).</span><span data-en>we host your tour on a custom URL under flyingcat.services — share by link, embed on your site or attach to a proposal. no install required. on request we also deliver a standalone app for PC/Mac or a native gaussian splatting file (.ply).</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ DIVIDER 3 ═══ -->
+<div class="dot-divider" aria-hidden="true" data-divider>
+  <canvas></canvas>
+</div>
+
+<!-- ═══ ABOUT ═══ -->
+<section id="about" aria-labelledby="about-heading">
+  <div class="about-inner">
+    <div>
+      <div class="section-label" style="margin-bottom:24px;"><span data-cs>o nás</span><span data-en>about</span></div>
+      <div class="stats">
+        <div class="stat"><div class="stat-num">2025</div><div class="stat-label"><span data-cs>založeno</span><span data-en>founded</span></div></div>
+        <div class="stat"><div class="stat-num">5–10<span class="stat-unit"> dní</span></div><div class="stat-label"><span data-cs>dodací doba</span><span data-en>delivery time</span></div></div>
+        <div class="stat"><div class="stat-num">∞</div><div class="stat-label"><span data-cs>zobrazení bez limitu</span><span data-en>unlimited views</span></div></div>
+      </div>
+    </div>
+    <div class="about-text">
+      <h2 class="section-title" id="about-heading"><span data-cs>smysl</span><span data-en>purpose</span></h2>
+      <p class="body-text" style="margin-top:18px;"><span data-cs>flyingcat je malé české studio. tvoříme gaussian splatting prohlídky prostoru a objektu.</span><span data-en>flyingcat is a small czech studio. we create gaussian splatting tours of spaces and objects.</span></p>
+      <p class="body-text" style="margin-top:14px;"><span data-cs>naše prohlídky řeší problémy a vytvářejí nové možnosti. nahrazují fotky modelem, umožňují pracovat na prostoru odkudkoli, nebo zachovávají to, co už zítra nemusí existovat.</span><span data-en>our tours solve problems and create new possibilities. they replace photos with a model, enable working on a space from anywhere, or preserve what may no longer exist tomorrow.</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ DIVIDER 4 ═══ -->
+<div class="dot-divider" aria-hidden="true" data-divider>
+  <canvas></canvas>
+</div>
+
+<!-- ═══ USE CASES ═══ -->
+<section id="usecases" aria-labelledby="uc-heading">
+  <div class="uc-inner">
+    <div class="uc-header">
+      <div class="section-label"><span data-cs>využití</span><span data-en>use cases</span></div>
+      <h2 class="section-title" id="uc-heading"><span data-cs>pro koho prohlídky děláme</span><span data-en>who we work with</span></h2>
+    </div>
+    <div class="uc-grid">
+      <div class="uc-item"><div class="uc-dot-corner"></div><div class="uc-num">·&nbsp;&nbsp;01</div><div class="uc-name"><span data-cs>umělci a instituce</span><span data-en>artists & institutions</span></div><div class="uc-desc"><span data-cs>věrná prostorová prezentace děl a galerijních prostor — přístupná kdykoliv a odkudkoliv. kolem skenu vlastní rozhraní s navigací, popisky a kurátorským výkladem v podobě instituce.</span><span data-en>faithful spatial presentation of artworks and gallery spaces — accessible anytime, from anywhere. custom interface around the scan with navigation, labels and curatorial commentary in the institution's voice.</span></div></div>
+      <div class="uc-item"><div class="uc-dot-corner"></div><div class="uc-num">·&nbsp;&nbsp;02</div><div class="uc-name"><span data-cs>prodejci a sběratelé vozů</span><span data-en>car dealers & collectors</span></div><div class="uc-desc"><span data-cs>vůz zvenčí i zevnitř, přepínání orbit / procházka. rozhraní na míru značce — úvodní obrazovka, výbava, specifikace, konfigurace.</span><span data-en>the car from outside and in, with orbit / walk switching. interface tailored to the brand — splash screen, specs, equipment, configuration.</span></div></div>
+      <div class="uc-item"><div class="uc-dot-corner"></div><div class="uc-num">·&nbsp;&nbsp;03</div><div class="uc-name"><span data-cs>majitelé podniků</span><span data-en>business owners</span></div><div class="uc-desc"><span data-cs>provozovny, obchody, byty ve věrné podobě, k prohlídce na dálku. vlastní rozhraní s navigací, informačními body a kontaktem, sladěné se značkou.</span><span data-en>premises, shops, apartments in faithful form, available for remote viewing. custom interface with navigation, info points and contact, aligned with your brand.</span></div></div>
+      <div class="uc-item"><div class="uc-dot-corner"></div><div class="uc-num">·&nbsp;&nbsp;04</div><div class="uc-name"><span data-cs>stavbaři</span><span data-en>builders</span></div><div class="uc-desc"><span data-cs>dokumentace stavu objektu k danému datu pro monitoring a archivaci. rozhraní s přepínáním záznamů, orientací v projektu a poznámkami.</span><span data-en>documentation of the object's condition at a given date for monitoring and archiving. interface with record switching, project orientation and notes.</span></div></div>
+      <div class="uc-item"><div class="uc-dot-corner"></div><div class="uc-num">·&nbsp;&nbsp;05</div><div class="uc-name"><span data-cs>filmaři a produkce</span><span data-en>filmmakers & production</span></div><div class="uc-desc"><span data-cs>více lokací v jednom projektu, přepínání přes UI. rozhraní na míru workflow produkce — posouzení atmosféry a světla před výjezdem.</span><span data-en>multiple locations in one project, switching via UI. interface tailored to the production workflow — assess atmosphere and light before travelling.</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ DIVIDER 5 ═══ -->
+<div class="dot-divider" aria-hidden="true" data-divider>
+  <canvas></canvas>
+</div>
+
+<!-- ═══ CONTACT ═══ -->
+<section id="contact" aria-labelledby="contact-heading">
+  <div class="contact-inner">
+    <div class="contact-intro">
+      <div class="section-label"><span data-cs>kontakt</span><span data-en>contact</span></div>
+      <h2 class="section-title" id="contact-heading"><span data-cs>poptat prohlídku</span><span data-en>request a tour</span></h2>
+      <p class="body-text" style="margin-top:14px;"><span data-cs>napište nám pár vět o prostoru a my se ozveme s návrhem a cenou. obvykle odpovídáme do 24 hodin.</span><span data-en>tell us about your space and we'll come back with a proposal and quote. usually within 24 hours.</span></p>
+      <div class="contact-channels">
+        <div class="channel">
+          <div class="channel-label">e-mail</div>
+          <a href="mailto:info@flyingcat.services" class="channel-value">info@flyingcat.services</a>
+        </div>
+        <div class="channel">
+          <div class="channel-label"><span data-cs>oblast</span><span data-en>area</span></div>
+          <div class="channel-value"><span data-cs>česko, slovensko, eu (na vyžádání)</span><span data-en>czechia, slovakia, eu (on request)</span></div>
+        </div>
+      </div>
+    </div>
+    <form class="form" id="contact-form" onsubmit="handleSubmit(event)">
+      <div class="form-row">
+        <div class="field">
+          <label for="f-name"><span data-cs>jméno</span><span data-en>name</span></label>
+          <input type="text" id="f-name" name="name" required autocomplete="name">
+        </div>
+        <div class="field">
+          <label for="f-email"><span data-cs>e-mail</span><span data-en>e-mail</span></label>
+          <input type="email" id="f-email" name="email" required autocomplete="email">
+        </div>
+      </div>
+      <div class="field">
+        <label for="f-subject"><span data-cs>typ projektu</span><span data-en>project type</span></label>
+        <select id="f-subject" name="subject">
+          <option value="" disabled selected data-lcs="—" data-len="—">—</option>
+          <option value="umeni" data-lcs="umění" data-len="art">umění</option>
+          <option value="auta" data-lcs="auta" data-len="automotive">auta</option>
+          <option value="komercni" data-lcs="komerční" data-len="commercial">komerční</option>
+          <option value="stavba" data-lcs="stavbaři" data-len="construction">stavbaři</option>
+          <option value="film" data-lcs="filmaři" data-len="filmmakers">filmaři</option>
+          <option value="jine" data-lcs="jiné" data-len="other">jiné</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="f-message"><span data-cs>zpráva</span><span data-en>message</span></label>
+        <textarea id="f-message" name="message" required></textarea>
+      </div>
+      <div class="hp-field" aria-hidden="true">
+        <label for="f-company">company</label>
+        <input type="text" id="f-company" name="company" tabindex="-1" autocomplete="off">
+      </div>
+      <button type="submit" class="form-submit"><span data-cs>odeslat</span><span data-en>send</span></button>
+      <div class="form-note" id="form-status" aria-live="polite"></div>
+    </form>
+  </div>
+</section>
+
+<!-- ═══ DIVIDER 6 ═══ -->
+<div class="dot-divider" aria-hidden="true" data-divider>
+  <canvas></canvas>
+</div>
+<div style="height: 30vh;"></div>
+<footer>
+  <a href="#home" class="footer-logo" aria-label="flyingcat"><img src="logo.png" alt="flyingcat"></a>
+  <div class="footer-info">
+    <div class="footer-url">flyingcat.services</div>
+    <div class="footer-copy">© 2026 flyingcat · <span data-cs>všechna práva vyhrazena</span><span data-en>all rights reserved</span></div>
+  </div>
+  <nav class="footer-links">
+    <a href="#contact" class="footer-link"><span data-cs>kontakt</span><span data-en>contact</span></a>
+    <a href="mailto:info@flyingcat.services" class="footer-link">e-mail</a>
+  </nav>
+</footer>
+
 <script>
-(function () {
-  var HLS = "https://cdn.flyingcat.services/film/hls/master.m3u8";
-  var MP4 = "https://cdn.flyingcat.services/film/CharlesBridgePrague_SQ.mp4";
-  var v = document.getElementById("film");
-  if (v.canPlayType("application/vnd.apple.mpegurl")) {
-    v.src = HLS;                                   // Safari / iOS — nativní HLS
-  } else if (window.Hls && Hls.isSupported()) {
-    var hls = new Hls({ capLevelToPlayerSize: true, startLevel: -1 });
-    hls.loadSource(HLS);
-    hls.attachMedia(v);
-    hls.on(Hls.Events.ERROR, function (e, d) {
-      if (d.fatal) { hls.destroy(); v.src = MP4; }  // když HLS selže, pustí se mp4
-    });
+// ════════════════════════════════════════════════════════════
+// DOT FIELD — interaktívne pole + 3 intro animácie + launch sekvencia
+// ════════════════════════════════════════════════════════════
+
+// ── viewport config ──
+function dotConfigForViewport() {
+  const w = window.innerWidth;
+  if (w <= 600) {
+    return { spacing: 18, dotRadius: 1.1, radiusActive: 3.0, influence: 100, pushStrength: 22, ease: 0.10, easeReturn: 0.04 };
+  }
+  return { spacing: 24, dotRadius: 2.2, radiusActive: 5.2, influence: 170, pushStrength: 32, ease: 0.12, easeReturn: 0.04 };
+}
+
+const COLORS = { inkRGB: [10, 10, 10], redRGB: [184, 49, 44] };
+
+// ── helpers ──
+const easeInCubic  = t => t * t * t;
+const easeInQuad   = t => t * t;
+const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+const clampN = (v, a, b) => v < a ? a : (v > b ? b : v);
+
+// ════════════════════════════════════════════════════════════
+// INTRO ANIMÁCIE — každá je čistá funkcia (d, p, t, E)
+//   E = { W, H, spacing }
+//   štart: tečka v rastri (ox/oy) → odíde z obrazu (žiadny návrat)
+//   nastavuje: d.x, d.y, d.heat, d.alpha
+// ════════════════════════════════════════════════════════════
+
+// 1 — ZÁVĚSY: od stredu sa rozhrnú do strán ako opona, nepravidelné vlny
+function introZaves(d, p, t, E) {
+  const cx = E.W / 2;
+  let side = d.ox < cx ? -1 : 1;
+  if (Math.abs(d.ox - cx) < E.spacing * 0.5) side = (d.col % 2 === 0) ? -1 : 1;
+
+  const hx = Math.abs(d.ox - cx) / (E.W / 2);
+  const y = d.oy;
+  const wave =
+      Math.sin(y * 0.020 + t * 0.0022 + 0.0) * 0.55 +
+      Math.sin(y * 0.013 + t * 0.0015 + 2.1) * 0.30 +
+      Math.sin(y * 0.031 + t * 0.0031 + 4.2) * 0.18;
+  const releaseP = clampN(hx * 0.5 + wave * 0.12, 0, 0.9);
+
+  const lp = clampN((p - releaseP) / (1 - releaseP), 0, 1);
+  const e = easeInCubic(lp);
+  const travel = side * (E.W * 1.15) * e;
+  const wob = Math.sin(y * 0.05 + t * 0.004 + d.seed * 6.283) * 5 * lp;
+
+  d.x = d.ox + travel;
+  d.y = d.oy + wob;
+  d.heat = clampN(1 - lp * 1.8, 0, 1) * (lp > 0 ? 1 : 0) * 0.6;
+  d.alpha = 1;
+}
+
+// 2 — PÁD: uvoľnia sa a padajú dole s gravitáciou, rozfázovane, bez odrazu
+function introPad(d, p, t, E) {
+  const releaseP = clampN(d.seed * 0.38 + (d.row / d.rows) * 0.06, 0, 0.45);
+  const lt = p - releaseP;
+  if (lt <= 0) {
+    const near = clampN(1 + lt * 8, 0, 1);
+    d.x = d.ox + (d.seed - 0.5) * near * 1.2;
+    d.y = d.oy;
+    d.heat = 0; d.alpha = 1;
+    return;
+  }
+  const fall  = lt * lt * E.H * 4.2;
+  const drift = (d.seed - 0.5) * 26 * lt;
+  d.x = d.ox + drift;
+  d.y = d.oy + fall;
+  d.heat = clampN(0.5 - lt * 5, 0, 1) * 0.5;
+  d.alpha = 1;
+}
+
+// 3 — KOULE: zo stredu sa priženie guľa, roztrhne obraz, tečky von do všetkých strán
+function introKoule(d, p, t, E) {
+  const cx = E.W / 2, cy = E.H / 2;
+  const maxR = Math.hypot(E.W, E.H) / 2 * 1.05;
+  const dx = d.ox - cx, dy = d.oy - cy;
+  let dist = Math.hypot(dx, dy);
+  if (dist < 0.0001) dist = 0.0001;
+  const ang = Math.atan2(dy, dx) + (d.seed - 0.5) * 0.22;
+  const ux = Math.cos(ang), uy = Math.sin(ang);
+
+  const P_ANT = 0.16;
+  if (p < P_ANT) {                                   // napätie: guľa sa priženie, stred žiari
+    const a = p / P_ANT;
+    const pull = easeInQuad(a) * 8;
+    const tj = (d.seed - 0.5) * a * 2;
+    d.x = d.ox - ux * pull + tj;
+    d.y = d.oy - uy * pull + tj;
+    d.heat = clampN(1 - dist / (maxR * 0.6), 0, 1) * a * 0.7;
+    d.alpha = 1;
+    return;
+  }
+
+  const ep = (p - P_ANT) / (1 - P_ANT);              // explózia
+  const waveR = easeOutCubic(ep) * maxR * 1.7;
+  const hit = waveR - dist;
+  if (hit <= 0) {
+    const near = clampN(1 - (dist - waveR) / (maxR * 0.22), 0, 1);
+    const tj = (d.seed - 0.5) * near * 3;
+    d.x = d.ox + tj;
+    d.y = d.oy + tj;
+    d.heat = near * 0.28;
+    d.alpha = 1;
   } else {
-    v.src = MP4;
+    const excess = hit / maxR;
+    const thr = Math.pow(excess, 0.82) * maxR * 2.2 * (0.85 + d.seed * 0.3);
+    d.x = d.ox + ux * thr;
+    d.y = d.oy + uy * thr;
+    d.heat  = clampN(1 - excess * 2.4, 0, 1);
+    d.alpha = clampN(1 - excess * 1.0, 0, 1);
   }
-})();
-</script>
-<script>
-(function () {
-  // dot divider — port z hlavního webu (interactive, single row), barvy invertované
-  function dotCfg() {
-    return window.innerWidth <= 600
-      ? { spacing: 18, dotRadius: 1.1, radiusActive: 3.0, influence: 100, pushStrength: 22, ease: 0.10, easeReturn: 0.04 }
-      : { spacing: 24, dotRadius: 2.2, radiusActive: 5.2, influence: 170, pushStrength: 32, ease: 0.12, easeReturn: 0.04 };
+}
+
+const INTRO_ANIMS = [introZaves, introPad, introKoule];
+const INTRO_DUR_MS = 5000;   // dĺžka intro animácie (laditeľné)
+
+// ════════════════════════════════════════════════════════════
+// DOT FIELD ENGINE  — hero (interactive + intro) aj dividery (len interactive)
+//   perf: rAF beží len keď je pole viditeľné a niečo sa deje
+// ════════════════════════════════════════════════════════════
+function makeDotField({ container, canvas, singleRow }) {
+  const ctx = canvas.getContext('2d');
+  let dots = [], W = 0, H = 0, dpr = 1;
+  let cfg = dotConfigForViewport();
+  const ptr = { x: -9999, y: -9999, active: false };
+
+  let mode = 'interactive';   // interactive | hold | intro | cleared
+  let introAnim = null, introStart = 0, introDone = null;
+
+  let running = false, visible = true, settled = false;
+
+  function build() {
+    cfg = dotConfigForViewport();
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const r = container.getBoundingClientRect();
+    W = r.width; H = r.height;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  const pad = 10;
+  const padBottom = 30;   // o 20px viac dole — rezerva pre odrazené tečky (hore to kryje lišta)
+    const cols = Math.floor((W - pad * 2) / cfg.spacing) + 1;
+    const rows = singleRow ? 1 : Math.floor((H - pad - padBottom) / cfg.spacing) + 1;
+    const ox = pad + ((W - pad * 2) - (cols - 1) * cfg.spacing) / 2;
+    const oy = singleRow ? H / 2 : pad + ((H - pad - padBottom) - (rows - 1) * cfg.spacing) / 2;
+
+    dots = [];
+    for (let r2 = 0; r2 < rows; r2++) {
+      for (let c = 0; c < cols; c++) {
+        const x = ox + c * cfg.spacing, y = oy + r2 * cfg.spacing;
+        dots.push({ ox: x, oy: y, x, y, heat: 0, alpha: 1, seed: Math.random(), col: c, row: r2, cols, rows });
+      }
+    }
+    settled = false;
   }
-  var INK = [107, 107, 107], RED = [184, 49, 44];
+
+  function setPtr(cx, cy, active) {
+    const r = container.getBoundingClientRect();
+    ptr.x = cx - r.left; ptr.y = cy - r.top; ptr.active = active;
+    if (active) container.classList.add('touched');
+    settled = false; ensureRunning();
+  }
+  // pointer — meaningful only in interactive mode
+  container.addEventListener('mousemove', e => { if (mode === 'interactive') setPtr(e.clientX, e.clientY, ptr.active); });
+  container.addEventListener('mousedown', e => { if (mode === 'interactive') setPtr(e.clientX, e.clientY, true); });
+  window.addEventListener('mouseup', () => { ptr.active = false; });
+  container.addEventListener('mouseleave', () => { ptr.x = -9999; ptr.y = -9999; });
+  const tOpts = { passive: true };
+  let allowScroll = false;   // per-gesto: ak ťah začal v spodnom pruhu, necháme stránku scrollovať
+  container.addEventListener('touchstart', e => {
+    if (mode !== 'interactive') return;
+    const t = e.touches[0];
+    const r = container.getBoundingClientRect();
+    allowScroll = t.clientY >= r.bottom - 250;   // spodných 250px = scroll-through zóna
+    setPtr(t.clientX, t.clientY, true);
+  }, tOpts);
+  container.addEventListener('touchmove', e => {
+    if (mode !== 'interactive') return;
+    const t = e.touches[0];
+    if (!allowScroll) e.preventDefault();          // mimo spodnú zónu → blokuj scroll, ťahaj tečky
+    setPtr(t.clientX, t.clientY, true);
+  }, { passive: false });
+  container.addEventListener('touchend', () => { ptr.active = false; ptr.x = -9999; ptr.y = -9999; });
+
   function lerp(a, b, t) { return a + (b - a) * t; }
 
-  function dotStrip(container) {
-    var canvas = container.querySelector("canvas"), ctx = canvas.getContext("2d");
-    var dots = [], W = 0, H = 0, cfg = dotCfg(), running = false, visible = true;
-    var ptr = { x: -9999, y: -9999, active: false };
+  function drawDot(d) {
+    const a = d.alpha;
+    if (a <= 0.01) return;
+    if (d.x < -24 || d.x > W + 24 || d.y < -24 || d.y > H + 24) return;
+    const r = Math.round(lerp(COLORS.inkRGB[0], COLORS.redRGB[0], d.heat));
+    const g = Math.round(lerp(COLORS.inkRGB[1], COLORS.redRGB[1], d.heat));
+    const b = Math.round(lerp(COLORS.inkRGB[2], COLORS.redRGB[2], d.heat));
+    const radius = lerp(cfg.dotRadius, cfg.radiusActive, d.heat);
+    ctx.globalAlpha = a;
+    ctx.beginPath();
+    ctx.fillStyle = `rgb(${r},${g},${b})`;
+    ctx.arc(d.x, d.y, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
 
-    function build() {
-      cfg = dotCfg();
-      var dpr = Math.min(window.devicePixelRatio || 1, 2), r = container.getBoundingClientRect();
-      W = r.width; H = r.height;
-      canvas.width = W * dpr; canvas.height = H * dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      var pad = 10, cols = Math.floor((W - pad * 2) / cfg.spacing) + 1;
-      var ox = pad + ((W - pad * 2) - (cols - 1) * cfg.spacing) / 2;
-      dots = [];
-      for (var c = 0; c < cols; c++) { var x = ox + c * cfg.spacing; dots.push({ ox: x, oy: H / 2, x: x, y: H / 2, heat: 0 }); }
-    }
-    function setPtr(cx, cy, active) {
-      var r = container.getBoundingClientRect();
-      ptr.x = cx - r.left; ptr.y = cy - r.top; ptr.active = active; go();
-    }
-    container.addEventListener("mousemove", function (e) { setPtr(e.clientX, e.clientY, ptr.active); });
-    container.addEventListener("mousedown", function (e) { setPtr(e.clientX, e.clientY, true); });
-    window.addEventListener("mouseup", function () { ptr.active = false; });
-    container.addEventListener("mouseleave", function () { ptr.x = -9999; ptr.y = -9999; go(); });
-    container.addEventListener("touchstart", function (e) { var t = e.touches[0]; setPtr(t.clientX, t.clientY, true); }, { passive: true });
-    container.addEventListener("touchmove", function (e) { var t = e.touches[0]; setPtr(t.clientX, t.clientY, true); }, { passive: true });
-    container.addEventListener("touchend", function () { ptr.active = false; ptr.x = -9999; ptr.y = -9999; go(); });
+  function ensureRunning() { if (!running) { running = true; requestAnimationFrame(frame); } }
 
-    function go() { if (!running) { running = true; requestAnimationFrame(frame); } }
-    function frame() {
-      ctx.clearRect(0, 0, W, H);
-      if (!visible) { running = false; return; }
-      var inf2 = cfg.influence * cfg.influence, moving = false;
-      for (var i = 0; i < dots.length; i++) {
-        var d = dots[i], tx = d.ox, ty = d.oy, th = 0;
-        if (ptr.x > -9000) {
-          var dx = d.ox - ptr.x, dy = d.oy - ptr.y, dist2 = dx * dx + dy * dy;
-          if (dist2 < inf2) {
-            var dist = Math.sqrt(dist2) || 0.0001, tt = 1 - dist / cfg.influence;
-            tt = tt * tt * (3 - 2 * tt);
-            var push = cfg.pushStrength * tt;
-            tx = d.ox + (dx / dist) * push; ty = d.oy + (dy / dist) * push;
-            th = tt * (ptr.active ? 1 : 0.55);
-          }
-        }
-        var e = th < d.heat ? cfg.easeReturn : cfg.ease;
-        d.x = lerp(d.x, tx, e); d.y = lerp(d.y, ty, e); d.heat = lerp(d.heat, th, e);
-        if (Math.abs(d.x - d.ox) > 0.15 || Math.abs(d.y - d.oy) > 0.15 || d.heat > 0.01) moving = true;
-        ctx.beginPath();
-        ctx.fillStyle = "rgb(" + Math.round(lerp(INK[0], RED[0], d.heat)) + "," + Math.round(lerp(INK[1], RED[1], d.heat)) + "," + Math.round(lerp(INK[2], RED[2], d.heat)) + ")";
-        ctx.arc(d.x, d.y, lerp(cfg.dotRadius, cfg.radiusActive, d.heat), 0, Math.PI * 2);
-        ctx.fill();
+  function frame(now) {
+    ctx.clearRect(0, 0, W, H);
+
+    if (mode === 'cleared') { running = false; return; }
+
+    if (mode === 'intro') {
+      const p = Math.min((now - introStart) / INTRO_DUR_MS, 1);
+      const E = { W, H, spacing: cfg.spacing };
+      for (let i = 0; i < dots.length; i++) { introAnim(dots[i], p, now - introStart, E); drawDot(dots[i]); }
+      if (p >= 1) {
+        mode = 'cleared';
+        const cb = introDone; introDone = null; introAnim = null;
+        if (cb) cb();
       }
-      if (!moving && ptr.x < -9000) { running = false; return; }
       requestAnimationFrame(frame);
+      return;
     }
-    new IntersectionObserver(function (es) { es.forEach(function (en) { visible = en.isIntersecting; if (visible) go(); }); }).observe(container);
-    build(); go();
-    var rt; window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { build(); go(); }, 150); });
-  }
-  document.querySelectorAll("[data-divider]").forEach(dotStrip);
 
-  // language toggle
-  var root = document.documentElement, btn = document.getElementById("langBtn");
-  var lang = "cs";
-  try { lang = localStorage.getItem("fc-lang") || ((navigator.language || "").indexOf("cs") === 0 || (navigator.language || "").indexOf("sk") === 0 ? "cs" : "en"); } catch (e) {}
-  function set(l) {
-    lang = l; root.setAttribute("data-lang", l); root.lang = l;
-    btn.textContent = l === "cs" ? "EN" : "CZ";
-    try { localStorage.setItem("fc-lang", l); } catch (e) {}
+    if (mode === 'hold') {
+      for (let i = 0; i < dots.length; i++) {
+        const d = dots[i];
+        d.x = d.ox + Math.sin(now * 0.0011 + d.seed * 6.283) * 0.6;
+        d.y = d.oy + Math.cos(now * 0.0009 + d.seed * 6.283) * 0.6;
+        d.heat = 0; d.alpha = 1;
+        drawDot(d);
+      }
+      requestAnimationFrame(frame);
+      return;
+    }
+
+    // interactive
+    if (!visible) { running = false; return; }      // off-screen → stop rAF (perf)
+    const inf2 = cfg.influence * cfg.influence;
+    let moving = false;
+    for (let i = 0; i < dots.length; i++) {
+      const d = dots[i];
+      let tx = d.ox, ty = d.oy, th = 0;
+      if (ptr.x > -9000) {
+        const dx = d.ox - ptr.x, dy = d.oy - ptr.y;
+        const dist2 = dx * dx + dy * dy;
+        if (dist2 < inf2) {
+          const dist = Math.sqrt(dist2) || 0.0001;
+          let tt = 1 - dist / cfg.influence; tt = tt * tt * (3 - 2 * tt);
+          const push = cfg.pushStrength * tt;
+          tx = d.ox + (dx / dist) * push;
+          ty = d.oy + (dy / dist) * push;
+          th = tt * (ptr.active ? 1 : 0.55);
+        }
+      }
+      const isReturning = th < d.heat;
+      const e = isReturning ? cfg.easeReturn : cfg.ease;
+      d.x = lerp(d.x, tx, e);
+      d.y = lerp(d.y, ty, e);
+      d.heat = lerp(d.heat, th, e);
+      d.alpha = 1;
+      if (Math.abs(d.x - d.ox) > 0.15 || Math.abs(d.y - d.oy) > 0.15 || d.heat > 0.01) moving = true;
+      drawDot(d);
+    }
+    if (!moving && ptr.x < -9000) { settled = true; running = false; return; }  // idle → stop
+    requestAnimationFrame(frame);
   }
-  btn.addEventListener("click", function () { set(lang === "cs" ? "en" : "cs"); });
-  set(lang);
-})();
+
+  // ── controller (hero) ──
+  function hold() { mode = 'hold'; ensureRunning(); }
+  function playIntro(animFn, onDone) {
+    introAnim = animFn || INTRO_ANIMS[0];
+    introStart = performance.now();
+    introDone = onDone || null;
+    mode = 'intro';
+    ensureRunning();
+  }
+  function reset() {
+    for (const d of dots) { d.x = d.ox; d.y = d.oy; d.heat = 0; d.alpha = 1; }
+    ptr.x = -9999; ptr.y = -9999;
+    mode = 'interactive'; settled = false;
+    ensureRunning();
+  }
+
+  // ── visibility (perf): pauza mimo obrazovky ──
+  new IntersectionObserver(es => {
+    es.forEach(en => {
+      visible = en.isIntersecting;
+      if (visible) { if (mode === 'interactive') settled = false; ensureRunning(); }
+    });
+  }, { threshold: 0 }).observe(container);
+
+  build();
+  ensureRunning();
+  let rt;
+  window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { build(); ensureRunning(); }, 150); });
+
+  return { hold, playIntro, reset };
+}
+
+// ── inštancie ──
+const hero = makeDotField({
+  container: document.getElementById('home'),
+  canvas:    document.getElementById('dotcanvas')
+});
+document.querySelectorAll('[data-divider]').forEach(div => {
+  makeDotField({ container: div, canvas: div.querySelector('canvas'), singleRow: true });
+});
+
+// ════════════════════════════════════════════════════════════
+// GALLERY DATA
+// ════════════════════════════════════════════════════════════
+const TOURS = [
+  { slug: 'feroboh-01', thumb: 'https://feroboh-01.flyingcat.services/thumbnail.png', name_cs: 'františek bohunický', name_en: 'františek bohunický', type_cs: 'sochař · 2026', type_en: 'sculptor · 2026' },
+  { slug: 'porsche911', thumb: 'https://porsche911.flyingcat.services/thumbnail.png', name_cs: 'porsche 911 carrera 3.2 cabriolet', name_en: 'porsche 911 carrera 3.2 cabriolet', type_cs: 'demo · 2026', type_en: 'demo · 2026' },
+  { slug: 'gibsflyv', thumb: 'https://gibsflyv.flyingcat.services/thumbnail.png', name_cs: 'guitar flying V', name_en: 'guitar flying V', type_cs: 'kytara · 2026', type_en: 'guitar · 2026' },
+  { slug: 'tonchair', thumb: 'https://tonchair.flyingcat.services/thumbnail.png', name_cs: 'ton chair', name_en: 'ton chair', type_cs: 'židle · 2026', type_en: 'chair · 2026' },
+  { slug: 'viennaflat-01', thumb: 'https://viennaflat-01.flyingcat.services/thumbnail.png', name_cs: 'vídeňský byt', name_en: 'vienna flat', type_cs: 'interiér · 2026', type_en: 'interior · 2026' },
+];
+const BASE_URL = 'https://{slug}.flyingcat.services';
+
+function buildGallery() {
+  const grid  = document.getElementById('gallery-grid');
+  const lang  = document.body.classList.contains('lang-en') ? 'en' : 'cs';
+  grid.innerHTML = '';
+  TOURS.forEach(t => {
+    const url  = BASE_URL.replace('{slug}', t.slug);
+    const name = lang === 'en' ? t.name_en : t.name_cs;
+    const type = lang === 'en' ? t.type_en : t.type_cs;
+    const card = document.createElement('div');
+    card.className = 'g-card';
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('aria-label', name);
+    card.innerHTML = `<div class="g-thumb">${t.thumb ? `<img src="${t.thumb}" alt="${name}" loading="lazy">` : '<div class="g-dots"></div>'}<div class="g-overlay"><div class="play-btn">▶</div></div></div><div class="g-meta"><div class="g-name">${name}</div><div class="g-info">${type}</div></div>`;
+    card.addEventListener('click', () => launchTour(url, name));
+    card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); launchTour(url, name); } });
+    grid.appendChild(card);
+  });
+  syncGalleryMode();
+}
+
+// ── Gallery: slider šípky + archiv prepínač (dve zobrazenia tej istej sekcie) ──
+let galleryArchive = false;
+function syncGalleryMode() {
+  const lang = document.body.classList.contains('lang-en') ? 'en' : 'cs';
+  document.getElementById('gallery').classList.toggle('archive-mode', galleryArchive);
+  const btn = document.getElementById('gal-archive');
+  if (galleryArchive) btn.textContent = lang === 'en' ? '← back'   : '← zpět';
+  else                btn.textContent = lang === 'en' ? 'archive'  : 'archiv';
+}
+document.getElementById('gal-archive').addEventListener('click', () => {
+  galleryArchive = !galleryArchive;
+  if (!galleryArchive) document.getElementById('gallery-grid').scrollLeft = 0;
+  syncGalleryMode();
+});
+document.getElementById('gal-prev').addEventListener('click', () => {
+  document.getElementById('gallery-grid').scrollBy({ left: -426, behavior: 'smooth' });
+});
+document.getElementById('gal-next').addEventListener('click', () => {
+  document.getElementById('gallery-grid').scrollBy({ left: 426, behavior: 'smooth' });
+});
+
+// ════════════════════════════════════════════════════════════
+// LAUNCH SEKVENCIA  (in-place v #home, žiadny modal)
+//   klik na prohliadku → scroll hore → text zatahne sa doľava →
+//   klid v rastri → náhodná animácia → prohliadka sa zobrazí PRIAMO V DOTFIELDE
+// ════════════════════════════════════════════════════════════
+const INTRO_HOLD_MS = 2600;
+let currentUrl = '';
+let launchTimer = null;
+
+function prepareTour(url, name) {
+  currentUrl = url;
+  document.getElementById('tour-title').textContent = name;
+  // iframe sa vloží hneď a začne načítavať (tour-stage je skrytý cez visibility)
+  // → animácia kryje load 2.5 GB scény
+  document.getElementById('tour-iframe-wrap').innerHTML =
+    `<iframe src="${url}" title="${name}" allowfullscreen loading="eager"></iframe>`;
+}
+
+function launchTour(url, name) {
+  prepareTour(url, name);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  document.getElementById('home').classList.add('launching');
+  document.querySelector('.hero-content').classList.add('away');
+  hero.hold();
+  const pick = INTRO_ANIMS[Math.floor(Math.random() * INTRO_ANIMS.length)];
+  clearTimeout(launchTimer);
+  launchTimer = setTimeout(() => hero.playIntro(pick, revealTour), INTRO_HOLD_MS);
+}
+
+function revealTour() {
+  document.getElementById('tour-stage').classList.add('open');
+  document.getElementById('tour-stage').setAttribute('aria-hidden', 'false');
+  document.documentElement.classList.add('tour-open');
+  document.body.classList.add('tour-open');
+  requestAnimationFrame(fitTourFrame);
+}
+
+/* Mobile: draw the tour at a desktop-like virtual width, scaled down to fit —
+   mirrors what Safari does on the direct link, so the tour UI looks identical
+   in the gallery window, just shifted below the bar. Desktop: no-op. */
+const TOUR_VIRTUAL_W = 980;
+function fitTourFrame() {
+  const frame = document.querySelector('#tour-iframe-wrap iframe');
+  if (!frame) return;
+  const mobile = window.matchMedia('(max-width: 900px)').matches;
+  if (!mobile) { frame.style.width = frame.style.height = frame.style.transform = ''; return; }
+  const wrap = document.getElementById('tour-iframe-wrap');
+  const w = wrap.clientWidth, h = wrap.clientHeight;
+  if (!w || !h) return;
+  const s = w / TOUR_VIRTUAL_W;
+  frame.style.width = TOUR_VIRTUAL_W + 'px';
+  frame.style.height = Math.round(h / s) + 'px';
+  frame.style.transform = 'scale(' + s + ')';
+}
+window.addEventListener('resize', fitTourFrame);
+if (window.visualViewport) window.visualViewport.addEventListener('resize', fitTourFrame);
+
+function closeTour() {
+  clearTimeout(launchTimer);
+  const stage = document.getElementById('tour-stage');
+  stage.classList.remove('open');
+  stage.setAttribute('aria-hidden', 'true');
+  document.documentElement.classList.remove('tour-open');
+  document.body.classList.remove('tour-open');
+  // počkaj kým doblikne, potom uprac iframe a vráť hero
+  setTimeout(() => {
+    document.getElementById('tour-iframe-wrap').innerHTML = '';
+    document.getElementById('home').classList.remove('launching');
+    document.querySelector('.hero-content').classList.remove('away');
+    hero.reset();
+  }, 560);
+}
+
+document.getElementById('tour-close').addEventListener('click', closeTour);
+// klik na logo (v nav aj footer) zavrie prehliadku ak je otvorená
+document.querySelectorAll('.nav-logo, .footer-logo').forEach(el => {
+  el.addEventListener('click', () => {
+    if (document.getElementById('tour-stage').classList.contains('open')) closeTour();
+  });
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.getElementById('tour-stage').classList.contains('open')) closeTour();
+});
+
+// ── Language ──
+function setLang(lang) {
+  document.body.classList.remove('lang-cs', 'lang-en');
+  document.body.classList.add(lang === 'en' ? 'lang-en' : 'lang-cs');
+  document.documentElement.lang = lang;
+  document.getElementById('btn-cs').classList.toggle('active', lang === 'cs');
+  document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+  document.getElementById('btn-cs').setAttribute('aria-pressed', lang === 'cs');
+  document.getElementById('btn-en').setAttribute('aria-pressed', lang === 'en');
+  document.querySelectorAll('#f-subject option').forEach(o => {
+    const t = o.getAttribute(lang === 'en' ? 'data-len' : 'data-lcs');
+    if (t) o.textContent = t;
+  });
+  try { localStorage.setItem('fc-lang', lang); } catch (e) {}
+  buildGallery();
+}
+
+// ── Mobile menu ──
+function toggleMenu() {
+  document.getElementById('hamburger').classList.toggle('open');
+  document.getElementById('nav-drawer').classList.toggle('open');
+}
+function closeMenu() {
+  document.getElementById('hamburger').classList.remove('open');
+  document.getElementById('nav-drawer').classList.remove('open');
+}
+
+// ── Active nav on scroll ──
+document.querySelectorAll('.nav-links a').forEach(a => {
+  a.addEventListener('click', () => {
+    document.querySelectorAll('.nav-links a').forEach(x => x.classList.remove('active'));
+    a.classList.add('active');const targetId = a.getAttribute('href').replace('#', '');
+    document.querySelectorAll('.section-label').forEach(label => {
+      const section = label.closest('section[id]');
+      label.classList.toggle('active', section && section.id === targetId);
+    });
+    scrollLock = true;
+    clearTimeout(scrollLockTimer);
+    scrollLockTimer = setTimeout(() => { scrollLock = false; }, 2000);
+  });
+});
+document.querySelectorAll('.nav-drawer a').forEach(a => {
+  a.addEventListener('touchstart', () => {
+    a.classList.add('active');
+    setTimeout(() => { a.classList.remove('active'); }, 300);
+  });
+});
+let scrollLock = false;
+let scrollLockTimer;
+
+const sections = ['home', 'gallery', 'process', 'about', 'usecases', 'contact'];
+
+function updateActiveNav() {
+  if (scrollLock) return;
+  const scrollY = window.scrollY + window.innerHeight / 2;
+  let current = sections[0];
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.offsetTop <= scrollY) current = id;
+  });
+  document.querySelectorAll('.nav-links a').forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+  });
+   document.querySelectorAll('.section-label').forEach(label => {
+    const section = label.closest('section[id]');
+    label.classList.toggle('active', section && section.id === current);
+  });
+}
+
+window.addEventListener('scroll', updateActiveNav, { passive: true });
+updateActiveNav();
+   
+// ── Contact form ──
+async function handleSubmit(e) {
+  e.preventDefault();
+  const f = e.target;
+  const lang = document.body.classList.contains('lang-en') ? 'en' : 'cs';
+  const status = document.getElementById('form-status');
+  const btn = f.querySelector('.form-submit');
+  // honeypot — ak je vyplnené, je to bot: predstieraj úspech, nič neodosielaj
+  if (f.company && f.company.value) {
+    status.textContent = lang === 'en' ? 'message sent ✓' : 'zpráva odeslána ✓';
+    f.reset();
+    return;
+  }
+  btn.disabled = true;
+  status.textContent = lang === 'en' ? 'sending…' : 'odesílám…';
+  try {
+    const res = await fetch('https://contact.flyingcat.services/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: f.name.value,
+        email: f.email.value,
+        subject: f.subject.value,
+        message: f.message.value,
+        company: f.company ? f.company.value : ''
+      })
+    });
+    if (res.ok) {
+      status.textContent = lang === 'en' ? 'message sent ✓' : 'zpráva odeslána ✓';
+      f.reset();
+    } else {
+      throw new Error('server error');
+    }
+  } catch {
+    status.textContent = lang === 'en' ? 'something went wrong, try again' : 'něco se pokazilo, zkuste znovu';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ── Init ──
+let savedLang = 'cs';
+try { savedLang = localStorage.getItem('fc-lang') || 'cs'; } catch (e) {}
+setLang(savedLang);
 </script>
 </body>
 </html>
