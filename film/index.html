@@ -104,6 +104,60 @@
   .cta:hover { background: var(--ink); color: var(--bg); }
   .cta svg { width: 18px; height: 18px; }
 
+  /* ---------------- filmstrip — fotky ze skenu ---------------- */
+  .strip-wrap { margin-top: clamp(40px, 6vw, 64px); }
+  .strip-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+  .strip-head .eyebrow { margin: 0; }
+  .strip-head .hint { font-size: 11px; color: var(--faint); letter-spacing: .08em; }
+  .strip {
+    --perf: radial-gradient(circle, rgba(107,107,107,.9) 2px, transparent 2.5px) 0 50% / 24px 24px repeat-x;
+    position: relative; background: #000;
+    padding: 26px 0;
+  }
+  .strip::before, .strip::after {
+    content: ""; position: absolute; left: 0; right: 0; height: 26px; background: var(--perf); pointer-events: none;
+  }
+  .strip::before { top: 0; } .strip::after { bottom: 0; }
+  .strip-track {
+    display: flex; gap: 6px; overflow-x: auto; overflow-y: hidden;
+    padding: 0 6px 10px; cursor: grab;
+    scrollbar-width: thin; scrollbar-color: rgba(242,240,236,.35) transparent;
+    -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain;
+  }
+  .strip-track.dragging { cursor: grabbing; }
+  .strip-track::-webkit-scrollbar { height: 4px; }
+  .strip-track::-webkit-scrollbar-track { background: transparent; }
+  .strip-track::-webkit-scrollbar-thumb { background: rgba(242,240,236,.35); }
+  .strip-track button {
+    flex: none; padding: 0; border: 0; background: #111; cursor: inherit;
+    height: 180px; aspect-ratio: 1448 / 985; overflow: hidden;
+  }
+  .strip-track img {
+    display: block; width: 100%; height: 100%; object-fit: cover;
+    opacity: .82; transition: opacity .2s; -webkit-user-drag: none; user-select: none;
+  }
+  .strip-track button:hover img, .strip-track button:focus-visible img { opacity: 1; }
+
+  /* ---------------- lightbox ---------------- */
+  .lb {
+    position: fixed; inset: 0; z-index: 50; display: none;
+    background: #050607; align-items: center; justify-content: center;
+    touch-action: pan-y;
+  }
+  .lb.open { display: flex; }
+  .lb img { max-width: calc(100vw - 32px); max-height: calc(100vh - 120px); display: block; user-select: none; -webkit-user-drag: none; }
+  .lb button { position: absolute; color: var(--ink); background: rgba(10,11,13,.6); border: 1px solid var(--line); width: 48px; height: 48px; font-size: 20px; line-height: 1; }
+  .lb button:hover { border-color: rgba(242,240,236,.5); }
+  .lb .lb-close { top: 16px; right: 16px; font-size: 22px; }
+  .lb .lb-prev { left: 16px; top: 50%; transform: translateY(-50%); }
+  .lb .lb-next { right: 16px; top: 50%; transform: translateY(-50%); }
+  .lb .lb-count { position: absolute; bottom: 22px; left: 0; right: 0; text-align: center; font-size: 11px; letter-spacing: .3em; color: var(--dim); }
+  @media (max-width: 760px) {
+    .strip-track button { height: 130px; }
+    .strip-head .hint { display: none; }
+    .lb .lb-prev, .lb .lb-next { top: auto; bottom: 10px; transform: none; }
+  }
+
   footer { padding: 28px clamp(16px, 4vw, 40px); font-size: 11px; color: var(--faint); letter-spacing: .3em; text-transform: lowercase; }
 
   @media (max-width: 760px) {
@@ -173,6 +227,10 @@
     </div>
   </section>
 
+  <section class="strip-wrap" aria-label="Fotky ze skenu">
+    <div class="strip"><div class="strip-track" id="stripTrack"></div></div>
+  </section>
+
   <div class="specs">
     <div class="spec"><strong class="num">7</strong><span data-cs>skenů PortalCam</span><span data-en>PortalCam scans</span></div>
     <div class="spec"><strong class="num">67 M</strong><span>gaussians</span></div>
@@ -183,6 +241,14 @@
 
 <div class="dot-divider" aria-hidden="true" data-divider><canvas></canvas></div>
 <footer>flyingcat — praha</footer>
+
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Galerie">
+  <img id="lbImg" alt="">
+  <button class="lb-close" id="lbClose" type="button" aria-label="Zavřít">✕</button>
+  <button class="lb-prev" id="lbPrev" type="button" aria-label="Předchozí">←</button>
+  <button class="lb-next" id="lbNext" type="button" aria-label="Další">→</button>
+  <div class="lb-count num" id="lbCount"></div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.15/hls.min.js"></script>
 <script>
@@ -288,6 +354,78 @@
   }
   btn.addEventListener("click", function () { set(lang === "cs" ? "en" : "cs"); });
   set(lang);
+})();
+</script>
+<script>
+(function () {
+  // ---- filmstrip + lightbox ----
+  var BASE = "https://cdn.flyingcat.services/film/foto/";
+  var FOTO = ["01","03","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23"]
+    .map(function (n) { return "km_" + n + ".jpg"; });
+  var track = document.getElementById("stripTrack");
+  FOTO.forEach(function (f, i) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.setAttribute("aria-label", "Foto " + (i + 1));
+    b.innerHTML = '<img loading="lazy" decoding="async" draggable="false" alt="Karlův most — záběr ze skenu ' + (i + 1) + '" src="' + BASE + 'thumb/' + f + '">';
+    b.addEventListener("click", function () { if (!moved) open(i); });
+    track.appendChild(b);
+  });
+
+  // tažení myší (na dotyku funguje nativní scroll)
+  var down = false, moved = false, sx = 0, sl = 0;
+  track.addEventListener("pointerdown", function (e) {
+    if (e.pointerType !== "mouse") return;
+    down = true; moved = false; sx = e.clientX; sl = track.scrollLeft;
+  });
+  window.addEventListener("pointermove", function (e) {
+    if (!down) return;
+    var dx = e.clientX - sx;
+    if (Math.abs(dx) > 4) { moved = true; track.classList.add("dragging"); }
+    track.scrollLeft = sl - dx;
+  });
+  window.addEventListener("pointerup", function () {
+    down = false; track.classList.remove("dragging");
+    setTimeout(function () { moved = false; }, 0);
+  });
+
+  var lb = document.getElementById("lb"), img = document.getElementById("lbImg"),
+      cnt = document.getElementById("lbCount"), cur = 0, lastFocus = null;
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function show(i) {
+    cur = (i + FOTO.length) % FOTO.length;
+    img.src = BASE + "full/" + FOTO[cur];
+    cnt.textContent = pad(cur + 1) + " / " + pad(FOTO.length);
+    [1, -1].forEach(function (d) { new Image().src = BASE + "full/" + FOTO[(cur + d + FOTO.length) % FOTO.length]; });
+  }
+  function open(i) {
+    lastFocus = document.activeElement;
+    show(i); lb.classList.add("open");
+    document.documentElement.style.overflow = "hidden";
+    document.getElementById("lbClose").focus();
+  }
+  function close() {
+    lb.classList.remove("open"); img.removeAttribute("src");
+    document.documentElement.style.overflow = "";
+    if (lastFocus) lastFocus.focus();
+  }
+  document.getElementById("lbClose").addEventListener("click", close);
+  document.getElementById("lbPrev").addEventListener("click", function (e) { e.stopPropagation(); show(cur - 1); });
+  document.getElementById("lbNext").addEventListener("click", function (e) { e.stopPropagation(); show(cur + 1); });
+  lb.addEventListener("click", function (e) { if (e.target === lb) close(); });
+  document.addEventListener("keydown", function (e) {
+    if (!lb.classList.contains("open")) return;
+    if (e.key === "Escape") close();
+    else if (e.key === "ArrowLeft") show(cur - 1);
+    else if (e.key === "ArrowRight") show(cur + 1);
+  });
+  var tx = null;
+  lb.addEventListener("touchstart", function (e) { tx = e.touches[0].clientX; }, { passive: true });
+  lb.addEventListener("touchend", function (e) {
+    if (tx === null) return;
+    var dx = e.changedTouches[0].clientX - tx; tx = null;
+    if (Math.abs(dx) > 50) show(cur + (dx < 0 ? 1 : -1));
+  });
 })();
 </script>
 </body>
