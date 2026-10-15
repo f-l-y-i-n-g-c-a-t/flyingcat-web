@@ -62,7 +62,8 @@
     .brand { gap: 12px; }
     .brand img { height: 34px; }
     .brand b { font-size: 12px; letter-spacing: .24em; padding: 6px 6px 6px 9px; }
-    .bar-right .back { display: none; }
+    .bar-right .back .lbl { display: none; }
+    .bar-right .back { font-size: 18px; padding: 4px 6px; }
   }
 
   /* ---------------- video ---------------- */
@@ -182,9 +183,9 @@
 </svg>
 
 <header>
-  <a class="brand" href="/" aria-label="flyingcat"><img src="/logo.png" alt="flyingcat"><b>FILM</b></a>
+  <a class="brand" href="/film/" aria-label="flyingcat film"><img src="/logo.png" alt="flyingcat"><b>FILM</b></a>
   <div class="bar-right">
-    <a class="back" href="/"><span data-cs>← zpět</span><span data-en>← back</span></a>
+    <a class="back" href="/#gallery" aria-label="flyingcat"><span class="arr">←</span><span class="lbl"> <span data-cs>prohlídky</span><span data-en>tours</span></span></a>
     <button class="lang" id="langBtn" type="button">EN</button>
   </div>
 </header>
