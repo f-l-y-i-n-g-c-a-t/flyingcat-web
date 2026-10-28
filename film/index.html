@@ -84,7 +84,7 @@
   main { max-width: 1280px; margin: 0 auto; padding: clamp(20px, 4vw, 48px) clamp(16px, 4vw, 40px) 80px; }
 
   .frame { position: relative; width: 100%; background: #000; }
-  .frame video { display: block; width: 100%; height: auto; background: #000; }
+  .frame video { display: block; width: 100%; height: auto; aspect-ratio: 1 / 1; background: #000; }
 
 
   /* ---------------- copy ---------------- */
@@ -207,7 +207,7 @@
 <main>
   <div class="frame">
     <!-- VIDEO: HLS (adaptivní kvalita) v R2 film/hls/master.m3u8, mp4 jako záloha -->
-    <video id="film" controls playsinline preload="metadata"
+    <video id="film" width="1920" height="1920" controls playsinline preload="metadata"
            poster="https://cdn.flyingcat.services/film/CharlesBridgePrague_SQ.png"></video>
   </div>
 
