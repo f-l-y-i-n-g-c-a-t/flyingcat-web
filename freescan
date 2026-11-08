@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Free scan — forest road · flyingcat</title>
+<meta name="robots" content="index,follow">
+<style>
+  :root{
+    --bg:#0d0d0e; --panel:#161618; --line:#2a2a2d;
+    --text:#f3f1ec; --muted:#8c8880; --accent:#e23b2e;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    min-height:100%; display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    padding:48px 20px; text-align:center;
+  }
+  .brand{
+    text-transform:lowercase; letter-spacing:.42em;
+    font-size:13px; color:var(--muted); margin-bottom:34px;
+    padding-left:.42em;
+  }
+  h1{font-size:clamp(22px,4vw,30px); font-weight:600; margin:0 0 10px}
+  .sub{color:var(--muted); max-width:560px; margin:0 auto 6px}
+  .meta{color:var(--muted); font-size:14px; margin:0 auto 34px}
+  .files{
+    display:flex; gap:14px; flex-wrap:wrap; justify-content:center;
+    width:100%; max-width:620px;
+  }
+  a.dl{
+    flex:1 1 240px; text-decoration:none; color:var(--text);
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:22px 20px; display:flex; flex-direction:column; gap:4px;
+    transition:border-color .15s, transform .15s;
+  }
+  a.dl:hover{border-color:var(--accent); transform:translateY(-2px)}
+  .fmt{font-size:19px; font-weight:600; letter-spacing:.02em}
+  .size{color:var(--muted); font-size:14px}
+  .note{color:var(--muted); font-size:13px; margin-top:40px; max-width:560px}
+  .foot{margin-top:28px; font-size:13px}
+  .foot a{color:var(--muted); text-decoration:none; margin:0 10px}
+  .foot a:hover{color:var(--text)}
+  @media (prefers-color-scheme:light){
+    :root{--bg:#f4f2ee;--panel:#fff;--line:#e2ded6;--text:#17140f;--muted:#857f74}
+  }
+</style>
+</head>
+<body>
+  <div class="brand">f l y i n g c a t</div>
+
+  <h1>Forest road — free gaussian splat scan</h1>
+  <p class="sub">1.5 km forest road captured with Xgrids PortalCam. 26 million points.</p>
+  <p class="meta">Free to download · free for commercial use · no sign-up · do not resell</p>
+
+  <div class="files">
+    <a class="dl" href="https://cdn.flyingcat.services/freescan/flyingcat_freescan_road_PLY.rar">
+      <span class="fmt">PLY</span>
+      <span class="size">point cloud · 5.3 GB (.rar)</span>
+    </a>
+    <a class="dl" href="https://cdn.flyingcat.services/freescan/flyingcat_freescan_road_LCC2.rar">
+      <span class="fmt">LCC2</span>
+      <span class="size">LCC project · 939 MB (.rar)</span>
+    </a>
+  </div>
+
+  <p class="note">PLY works in most gaussian-splat viewers. LCC2 is the native Xgrids format using SOG compression, ideal for use with the LCC plugin for Unreal.</p>
+
+  <div class="foot">
+    <a href="https://flyingcat.services">flyingcat.services</a>
+    <span>· 2026</span>
+  </div>
+</body>
+</html>
